@@ -308,6 +308,11 @@ Proof.
   apply H2. apply Full_intro.
 Qed.
 
+Lemma exp_neq_0 : forall x, exp x <> 0.
+Proof.
+  intros x H1. pose proof exp_pos x as H2; lra.
+Qed.
+
 Lemma exp_log : forall x, x > 0 -> exp (log x) = x.
 Proof.
   intros x H1. pose proof exp_inverse_log as [H2 [H3 [H4 H5]]]; auto.
@@ -1078,4 +1083,133 @@ Proof.
   unfold log_.
   rewrite log_Rpower; auto. field. 
   pose proof log_pos b ltac:(lra) as H4. lra.
+Qed.
+
+Lemma continuous_at_exp : forall x, continuous_at exp x.
+Proof.
+  intros x. apply differentiable_at_imp_continuous_at.
+  apply derivative_at_imp_differentiable_at with (f' := exp).
+  apply theorem_18_2.
+Qed.
+
+Lemma continuous_exp : continuous exp.
+Proof.
+  apply differentiable_imp_continuous.
+  apply derivative_imp_differentiable with (f' := exp).
+  apply theorem_18_2.
+Qed.
+
+Lemma derivative_exp : ⟦ der ⟧ exp = exp.
+Proof. apply theorem_18_2. Qed.
+
+Lemma derivative_ln : forall x, x > 0 -> ⟦ der x ⟧ log = (fun x0 => 1 / x0).
+Proof.
+  intros x H. apply derivative_log_x; auto.
+Qed.
+
+Lemma derivative_log : forall x, x > 0 -> ⟦ der x ⟧ log = (fun x0 => 1 / x0).
+Proof. apply derivative_ln. Qed.
+
+Lemma derivative_at_exp : forall x, ⟦ der x ⟧ exp = exp.
+Proof. apply theorem_18_2. Qed.
+
+Lemma continuous_at_log : forall x, x > 0 -> continuous_at log x.
+Proof.
+  intros x H1. apply differentiable_at_imp_continuous_at.
+  exists (1 / x). apply derivative_log_x; auto.
+Qed.
+
+Lemma derivative_at_log_comp : forall f f' a,
+  f a > 0 ->
+  ⟦ der a ⟧ f = f' ->
+  ⟦ der a ⟧ (fun x => log (f x)) = (fun x => f' x / f x).
+Proof.
+  intros f f' a H1 H2.
+  replace (f' / f)%function with (((fun y : R => 1 / y)%R ∘ f)%function ⋅ f')%function.
+  2: { extensionality x. unfold compose. lra. }
+  apply derivative_at_comp; auto.
+  apply derivative_log_x; auto.
+Qed.
+
+Lemma derivative_at_ln_comp : forall f f' a,
+  f a > 0 ->
+  ⟦ der a ⟧ f = f' ->
+  ⟦ der a ⟧ (fun x => ln (f x)) = (fun x => f' x / f x).
+Proof.
+  intros f f' a H1 H2.
+  replace (fun x => ln (f x)) with (fun x => log (f x)).
+  2: { extensionality x. rewrite ln_eq_log. reflexivity. }
+  apply derivative_at_log_comp; auto.
+Qed.
+
+Lemma derivative_at_Rpower_comp : forall f g f' g' a,
+  f a > 0 ->
+  ⟦ der a ⟧ f = f' ->
+  ⟦ der a ⟧ g = g' ->
+  ⟦ der a ⟧ (fun x => f x ^^ g x) = (fun x => f x ^^ g x * (g' x * log (f x) + g x * (f' x / f x))).
+Proof.
+  intros f g f' g' a H1 H2 H3.
+  assert (H4 : continuous_at f a).
+  { apply differentiable_at_imp_continuous_at. exists (f' a). apply H2. }
+  unfold continuous_at in H4. destruct (H4 (f a) H1) as [δ [H5 H6]].
+  apply derivative_at_eq with (f1 := fun x => exp (g x * log (f x))).
+  - exists δ. split; [lra |]. intros x H7.
+    assert (H8 : f x > 0).
+    { assert (x = a \/ x <> a) as [H9 | H9] by lra.
+      - rewrite H9. exact H1.
+      - specialize (H6 x ltac:(solve_R)). solve_R. }
+    unfold Rpower. destruct (Rlt_dec 0 (f x)); try lra.
+  - apply derivative_at_ext_val with (f' := fun x => exp (g x * log (f x)) * (g' x * log (f x) + g x * (f' x / f x))).
+    + apply derivative_at_comp with (g := exp) (g' := exp).
+      * apply derivative_at_mult.
+        -- exact H3.
+        -- apply derivative_at_log_comp; auto.
+      * pose proof theorem_18_2 as H7. unfold derivative in H7. apply H7.
+    + simpl. replace (exp (g a * log (f a))) with (f a ^^ g a).
+      2: { unfold Rpower. destruct (Rlt_dec 0 (f a)); try lra. }
+      lra.
+Qed.
+
+Lemma derivative_Rpower : forall a x, x > 0 ->
+  ⟦ der x ⟧ (fun t => t ^^ a) = (fun t => a * t ^^ (a - 1)).
+Proof.
+  intros a x H1.
+  apply derivative_at_eq with (f1 := fun t => exp (a * log t)).
+  - exists (x / 2). split; [lra |]. intros t H2.
+    unfold Rpower. destruct (Rlt_dec 0 t); [reflexivity | solve_R].
+  - apply derivative_at_ext_val with (f' := fun t => exp (a * log t) * (a * (1 / t))).
+      apply derivative_at_comp with (g := exp) (g' := exp).
+      * apply derivative_at_mult_const_l. apply derivative_log_x. exact H1.
+      * pose proof theorem_18_2 as H2. unfold derivative in H2. apply H2.
+      * simpl. unfold Rpower. destruct (Rlt_dec 0 x); [| lra].
+        replace ((a - 1) * log x) with (a * log x + - log x) by lra.
+        rewrite theorem_18_3.
+        assert (H2 : exp (- log x) = 1 / x).
+        { replace (- log x) with (log 1 - log x) by (rewrite log_1; lra).
+          rewrite <- (corollary_18_2 1 x ltac:(lra) H1).
+          rewrite exp_log; [reflexivity | solve_R]. apply Rdiv_pos_pos; lra. }
+        rewrite H2. lra.
+Qed.
+
+Lemma derivative_Rpower_base : forall a x, a > 0 ->
+  ⟦ der x ⟧ (fun t => a ^^ t) = (fun t => a ^^ t * log a).
+Proof.
+  intros a x H1.
+  apply derivative_at_eq with (f1 := fun t => exp (t * log a)).
+  - exists 1. split; [lra |]. intros t H2.
+    unfold Rpower. destruct (Rlt_dec 0 a); [reflexivity | lra].
+  - apply derivative_at_ext_val with (f' := fun t => exp (t * log a) * (1 * log a)).
+    + apply derivative_at_comp with (g := exp) (g' := exp).
+      * apply derivative_at_mult_const_r. apply derivative_at_id.
+      * pose proof theorem_18_2 as H2. unfold derivative in H2. apply H2.
+    + simpl. unfold Rpower. destruct (Rlt_dec 0 a); [| lra].
+      lra.
+Qed.
+
+Lemma continuous_at_Rpower_const : forall r x,
+  x > 0 -> continuous_at (fun y => y ^^ r) x.
+Proof.
+  intros r x H1. apply differentiable_at_imp_continuous_at.
+  apply derivative_at_imp_differentiable_at with (f' := fun t => r * t ^^ (r - 1)).
+  apply derivative_Rpower; auto.
 Qed.

@@ -1041,7 +1041,6 @@ Proof.
   apply derivative_at_cos.
 Qed.
 
-
 Lemma differentiable_cos : differentiable cos.
 Proof.
   intros x.
@@ -3230,4 +3229,32 @@ Qed.
 Lemma cos_pi_2_val : cos (π / 2) = 0.
 Proof.
   apply cos_π_over_2.
+Qed.
+
+Lemma continuous_at_tan : forall x, cos x <> 0 -> continuous_at tan x.
+Proof.
+  intros x H. apply differentiable_at_imp_continuous_at.
+  apply derivative_at_imp_differentiable_at with (f' := (sec ^ 2)%function).
+  apply derivative_at_tan. assumption.
+Qed.
+
+Lemma continuous_at_arcsin : forall x, -1 < x < 1 -> continuous_at arcsin x.
+Proof.
+  intros x H. apply differentiable_at_imp_continuous_at.
+  apply derivative_at_imp_differentiable_at with (f' := (fun x => 1 / sqrt (1 - x ^ 2))).
+  apply derivative_at_arcsin. assumption.
+Qed.
+
+Lemma continuous_at_arccos : forall x, -1 < x < 1 -> continuous_at arccos x.
+Proof.
+  intros x H. apply differentiable_at_imp_continuous_at.
+  apply derivative_at_imp_differentiable_at with (f' := (fun x => -1 / sqrt (1 - x ^ 2))).
+  apply derivative_at_arccos. assumption.
+Qed.
+
+Lemma continuous_at_arctan : forall x, continuous_at arctan x.
+Proof.
+  intros x. apply differentiable_at_imp_continuous_at.
+  apply derivative_at_imp_differentiable_at with (f' := fun x => 1 / (1 + x ^ 2)).
+  pose proof derivative_arctan as H. unfold derivative in H. apply H.
 Qed.
