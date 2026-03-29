@@ -117,3 +117,6 @@ Calculus/Chapter13/Prelude.v
 src/simplex_main.ml
 src/g_simplex.mlg
 src/simplex_plugin.mlpack
+
+Calculus/Chapter19/Prelude.v
+Calculus/Chapter19/Problem_19_1.v
