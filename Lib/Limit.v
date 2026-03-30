@@ -1032,3 +1032,18 @@ Proof.
   - apply limit_right_sum; auto. intros k H3. specialize (H2 k H3) as H4.
     apply limit_iff in H4 as [_ H5]. exact H5.
 Qed.
+
+Lemma limit_locally_bounded : forall f a L,
+  ⟦ lim a ⟧ f = L ->
+  exists δ M, δ > 0 /\ M > 0 /\ forall x, 0 < |x - a| < δ -> |f x| <= M.
+Proof.
+  intros f a L H1.
+  assert (H2 : 1 > 0) by lra.
+  destruct (H1 1 H2) as [δ [H3 H4]].
+  exists δ, (|L| + 1).
+  split; [exact H3 | split].
+  - pose proof (Rabs_pos L); lra.
+  - intros x H5. specialize (H4 x H5).
+    assert (H6 : |f x| - |L| <= |f x - L|) by apply Rabs_triang_inv.
+    lra.
+Qed.

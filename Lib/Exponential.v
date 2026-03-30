@@ -761,6 +761,20 @@ Proof.
   apply theorem_18_3.
 Qed.
 
+Lemma Rpower_minus : forall a b c,
+  a > 0 -> a ^^ (b - c) = a ^^ b / a ^^ c.
+Proof.
+  intros a b c H1.
+  assert (H2 : a ^^ c <> 0) by (apply Rgt_not_eq, Rpower_gt_0; lra).
+  apply Rmult_eq_reg_r with (r := a ^^ c); auto.
+  unfold Rdiv. 
+  rewrite Rmult_assoc, Rinv_l; auto.
+  rewrite Rmult_1_r.
+  rewrite <- Rpower_plus; auto.
+  replace (b - c + c) with b by lra.
+  reflexivity.
+Qed.
+
 Lemma Rpower_pow : forall x y (n : nat),
   x >= 0 -> (n > 0) -> (x ^^ y) ^ n = x ^^ (INR n * y).
 Proof.
@@ -1212,4 +1226,44 @@ Proof.
   intros r x H1. apply differentiable_at_imp_continuous_at.
   apply derivative_at_imp_differentiable_at with (f' := fun t => r * t ^^ (r - 1)).
   apply derivative_Rpower; auto.
+Qed.
+
+Lemma Rpower_negative_unbounded_zero : forall p M,
+  p < 0 -> exists δ, δ > 0 /\ forall x, 0 < x < δ -> x ^^ p > M.
+Proof.
+  intros p M H1.
+  set (m := Rmax M 1 + 1).
+  assert (H2 : m > 0) by (unfold m; pose proof (Rmax_r M 1); lra).
+  set (δ := m ^^ (1 / p)).
+  assert (H3 : δ > 0) by (apply Rpower_gt_0; lra).
+  exists δ. split; [exact H3 |].
+  intros x [H4 H5].
+  assert (H6 : δ ^^ p <= x ^^ p).
+  { apply Rpower_le_contravar; lra. }
+  assert (H7 : δ ^^ p = m).
+  {
+    unfold δ. rewrite Rpower_mult; auto.
+    replace (1 / p * p) with 1 by (field; lra).
+    apply Rpower_1; lra.
+  }
+  rewrite H7 in H6.
+  unfold m in H6.
+  solve_R.
+Qed.
+
+Lemma diff_quotient_Rpower_bound : forall f β h,
+  f 0 = 0 -> h > 0 -> |f h| >= h ^^ β -> |(f h - f 0) / h| >= h ^^ (β - 1).
+Proof.
+  intros f β h H1 H2 H3.
+  pose proof Rinv_pos h H2 as H4.
+  rewrite <- H1.
+  replace (f h - 0) with (f h) by lra.
+  unfold Rdiv. rewrite Rabs_mult.
+  replace (|/ h|) with (/ h) by solve_R.
+  rewrite <- Rpower_1 with (x := h) at 1; [|lra].
+  replace (f (h ^^ 1) - f (f 0)) with (f h).
+  2: { rewrite Rpower_1; [|lra]. rewrite H1. rewrite H1. lra. }
+  replace (h ^^ (β - 1)) with (h ^^ β * / h).
+  2: { rewrite Rpower_minus; [|lra]. unfold Rdiv. rewrite Rpower_1; [|lra]. reflexivity. }
+  solve_R.
 Qed.

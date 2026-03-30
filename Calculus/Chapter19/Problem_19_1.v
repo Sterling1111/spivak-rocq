@@ -11,7 +11,7 @@ Lemma lemma_19_1_ii : forall c,
   ∫ (λ x, 1 / (√ (x - 1) + √ (x + 1))) =
   (λ x, 1 / 3 * ((x + 1) ^^ (3 / 2)) - 1 / 3 * ((x - 1) ^^ (3 / 2)) + c).
 Proof.
- intros c. unfold antiderivative. auto_diff.
+ intros c. unfold antiderivative. auto_diff; simpl.
 Admitted.
 
 Lemma lemma_19_1_iii : forall c,
@@ -32,12 +32,17 @@ Qed.
 Lemma lemma_19_1_iv : forall a b c, a > 0 -> b > 0 -> a <> b ->
   ∫ (λ x, (a ^^ x) / (b ^^ x)) =
   (λ x, ((a / b) ^^ x) / log (a / b) + c).
-Proof. Admitted.
+Proof.
+  intros a b c H1 H2 H3. unfold antiderivative. 
+
+Admitted.
 
 Lemma lemma_19_1_v : forall c,
   ∫ (λ x, (tan x) ^ 2) = 
   (λ x, tan x - x + c).
-Proof. Admitted.
+Proof.
+  intros c. unfold antiderivative. auto_diff.
+Admitted.
 
 Lemma lemma_19_1_vi : forall a c, a <> 0 ->
   ∫ (λ x, 1 / (a ^ 2 + x ^ 2)) =

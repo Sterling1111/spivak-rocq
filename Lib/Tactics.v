@@ -390,9 +390,16 @@ Ltac change_deriv_to_eval :=
     end
   | idtac ].
 
+Lemma ln_fun_eq : ln = log.
+Proof. extensionality x. apply ln_eq_log. Qed.
+
+Ltac normalize_math_funs :=
+  try rewrite ln_fun_eq in *.
+
 Ltac auto_limit :=
   intros;
   try solve [ solve_R ];
+  normalize_math_funs;
   change_fun_to_expr;
   match goal with
   | [ |- ⟦ lim ?a ⟧ (fun x => eval_expr ?e x) = ?L ] => 
@@ -415,6 +422,7 @@ Ltac auto_limit :=
 Ltac auto_cont :=
   intros;
   try solve [ solve_R ];
+  normalize_math_funs;
   try (match goal with 
   | [ |- continuous_on ?f ?I ] => apply continuous_at_imp_continuous_on; let a := fresh "a" in let Ha := fresh "H" in intros a Ha 
   | [ |- continuous ?f ] => let a := fresh "a" in intros a 
@@ -428,6 +436,7 @@ Ltac auto_cont :=
 Ltac auto_diff :=
   intros;
   try solve [ solve_R ];
+  normalize_math_funs;
   try (match goal with 
        | [ |- ⟦ der ⟧ _ ?D = _ ] => 
            apply derivative_at_imp_derivative_on; 
@@ -486,20 +495,19 @@ Proof.
   apply Rgt_not_eq.
   apply cos_gt_0_on_open_pi_2.
   pose proof π_pos as H2.
-  admit.
+  assert (3 < π < 3.2) by admit.
+  solve_R.
 Admitted.
 
 Lemma test_auto_diff_rpower : ⟦ der ⟧ (fun x => x ^^ 5) (1, 2) = (fun x => 5 * x ^^ 4).
 Proof.
   auto_diff.
-Admitted.
+  replace (5 - 1) with 4 by lra. lra.
+Qed.
 
 Lemma test_auto_diff_ln : ⟦ der ⟧ (fun x => ln (x + 1)) (0, 1) = (fun x => 1 / (x + 1)).
 Proof.
-  assert (H1: exp 1 > 0) by apply exp_pos.
-  replace (fun x => ln (x + 1)) with (fun x => log (x + 1)).
-  2: { extensionality x. unfold ln, log_, e. rewrite log_exp. lra. }
   auto_diff.
-Admitted.
+Qed.
 
 End Tactic_Tests_Advanced.
