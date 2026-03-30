@@ -879,6 +879,9 @@ Definition definite_integral a b (f : ℝ -> ℝ) : ℝ :=
 Definition antiderivative (f F : ℝ -> ℝ) : Prop :=
   ⟦ der ⟧ F = f.
 
+Definition antiderivative_on (f F : ℝ -> ℝ) (D : Ensemble ℝ) : Prop :=
+  ⟦ der ⟧ F D = f.
+
 Definition indefinite_integral_or_zero (f F : ℝ -> ℝ) : Prop :=
   antiderivative f F \/ (~ (exists G, antiderivative f G) /\ F = (fun _ => 0)).
 
@@ -904,6 +907,12 @@ Module IntegralNotations.
 
   Notation "∫ a b f" := (definite_integral a b f)
     (at level 9, f at level 0, a at level 0, b at level 0, format "∫  a  b  f") : integral_scope.
+
+  Notation "⟦ 'int' ⟧ f D = F" := (antiderivative_on f F D)
+    (at level 70, f at level 0, D at level 0, no associativity, format "⟦  'int'  ⟧  f  D  =  F") : integral_scope.
+
+  Notation "∫ f D '=' F" := (antiderivative_on f F D)
+    (at level 9, f at level 0, D at level 0, F at level 0, no associativity, format "∫  f  D  '='  F") : integral_scope.  
 
   Open Scope integral_scope.
 
@@ -1941,7 +1950,7 @@ Proof.
 Qed.
 
 Lemma integral_b_a_neg' : forall a b f,
-  ∫ a b f = ∫ b a -f.
+  ∫ a b f = ∫ b a (-f).
 Proof.
   intros a b f.
   pose proof Rtotal_order a b as [H1 | [H1 | H1]].

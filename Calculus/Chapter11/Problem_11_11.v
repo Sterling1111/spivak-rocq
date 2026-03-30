@@ -119,3 +119,5 @@ Proof.
   }
   apply H11; auto.
 Qed.
+
+End Cylinder.

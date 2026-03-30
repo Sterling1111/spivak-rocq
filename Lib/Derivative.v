@@ -251,6 +251,22 @@ Proof.
   intros a b H1 x H2. auto_interval.
 Qed.
 
+Lemma differentiable_domain_gt : forall a,
+  differentiable_domain (fun x => x > a).
+Proof.
+  intros a x H1.
+  left. exists (x - a). split; [solve_R |].
+  intros y H2. solve_R.
+Qed.
+
+Lemma differentiable_domain_lt : forall a,
+  differentiable_domain (fun x => x < a).
+Proof.
+  intros a x H1.
+  left. exists (a - x). split; [solve_R |].
+  intros y H2. solve_R.
+Qed.
+
 Lemma derivative_at_iff : forall f f' a,
   ⟦ der a ⟧ f = f' <-> ⟦ der a⁺ ⟧ f = f' /\ ⟦ der a⁻ ⟧ f = f'.
 Proof.

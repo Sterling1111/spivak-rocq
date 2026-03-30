@@ -1,12 +1,21 @@
 From Calculus.Chapter19 Require Import Prelude.
 
 Lemma lemma_19_1_i : forall c,
-  ∫ (λ x, ((x ^^ (3 / 5)) + (x ^^ (1 / 6))) / √ x) =
+  ∫ (λ x, ((x ^^ (3 / 5)) + (x ^^ (1 / 6))) / √ x) (0, ∞) =
   (λ x, 10 / 11 * (x ^^ (11 / 10)) + 3 / 2 * (x ^^ (2 / 3)) + c).
 Proof.
-  intros c. unfold antiderivative. auto_diff.
-Admitted.
-
+  intros c. unfold antiderivative_on. auto_diff. field_simplify.
+  - replace (11 / 10 - 1) with (1 / 10) by lra.
+    replace (2 / 3 - 1) with (-1 / 3) by lra.
+    rewrite <- Rpower_sqrt; auto.
+    replace ((x ^^ (3 / 5) + x ^^ (1 / 6)) / x ^^ (1 / 2)) with (x ^^ (3 / 5) / x ^^ (1 / 2) + x ^^ (1 / 6) / x ^^ (1 / 2)) by lra.
+    repeat rewrite <- Rpower_minus; auto.
+    replace (3 / 5 - 1 / 2) with (1 / 10) by lra.
+    replace (1 / 6 - 1 / 2) with (-1 / 3) by lra.
+    reflexivity.
+  - pose proof sqrt_lt_R0 x ltac:(solve_R). lra.
+Qed.
+    
 Lemma lemma_19_1_ii : forall c,
   ∫ (λ x, 1 / (√ (x - 1) + √ (x + 1))) =
   (λ x, 1 / 3 * ((x + 1) ^^ (3 / 2)) - 1 / 3 * ((x - 1) ^^ (3 / 2)) + c).
@@ -19,13 +28,14 @@ Lemma lemma_19_1_iii : forall c,
   (λ x, -1 / 3 * exp (-3 * x) - 1 / 2 * exp (-2 * x) - exp (-x) + c).
 Proof.
   intros c. unfold antiderivative. auto_diff. field_simplify.
-  - replace ((6 * exp (-3 * x) * exp (4 * x) + 6 * exp (-2 * x) * exp (4 * x) + 6 * exp (- x) * exp (4 * x)) / 6)
-    with (exp (-3 * x) * exp (4 * x) + exp (-2 * x) * exp (4 * x) + exp (- x) * exp (4 * x)) by lra.
-    repeat rewrite <- theorem_18_3.
-    replace (-3 * x + 4 * x) with x by lra.
-    replace (-2 * x + 4 * x) with (2 * x) by lra.
-    replace (- x + 4 * x) with (3 * x) by lra.
-    reflexivity. 
+  - replace ((6 * exp (-3 * x) + 6 * exp (-2 * x) + 6 * exp (- x)) / 6) with (exp (-3 * x) + exp (-2 * x) + exp (- x)) by lra.
+    replace (exp (-3 * x) + exp (-2 * x) + exp (- x)) with ((exp (-3 * x) * exp (4 * x) + exp (-2 * x) * exp (4 * x) + exp (- x) * exp (4 * x)) / exp (4 * x)).
+    + f_equal. repeat rewrite <- theorem_18_3.
+      replace (-3 * x + 4 * x) with x by lra.
+      replace (-2 * x + 4 * x) with (2 * x) by lra.
+      replace (- x + 4 * x) with (3 * x) by lra.
+      reflexivity.
+    + field. apply exp_neq_0.
   - apply exp_neq_0.
 Qed.
 

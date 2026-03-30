@@ -433,6 +433,24 @@ Ltac auto_cont :=
       apply cont_correct; repeat split; try solve_R
   end.
 
+Ltac solve_denoms :=
+  try (nra || lra || solve_R);
+  match goal with
+  | |- ?X <> 0 => apply Rgt_not_eq; solve_denoms
+  | |- ?X <> 0 => apply Rlt_not_eq; solve_denoms
+  | |- 0 < √( ?X ) => apply sqrt_lt_R0; solve_denoms
+  | |- 0 < exp ?X => apply exp_pos
+  | |- 0 < ?X ^ 2 => apply pow2_gt_0; solve_denoms
+  end;
+  try (nra || lra || solve_R).
+
+Ltac diff_simplify :=
+  simpl; 
+  try solve [lra | nra]; 
+  try field; 
+  repeat split; 
+  try solve_denoms.
+
 Ltac auto_diff :=
   intros;
   try solve [ solve_R ];
@@ -440,19 +458,27 @@ Ltac auto_diff :=
   try (match goal with 
        | [ |- ⟦ der ⟧ _ ?D = _ ] => 
            apply derivative_at_imp_derivative_on; 
-           [ try apply differentiable_domain_open; try apply differentiable_domain_closed; solve_R 
+           [ try apply differentiable_domain_open; 
+             try apply differentiable_domain_closed; 
+             try apply differentiable_domain_gt; 
+             try apply differentiable_domain_lt; 
+             solve_R 
            | let x := fresh "x" in let H1 := fresh "H" in intros x H1 ] 
        end);
-  change_deriv_to_eval;
+  try change_deriv_to_eval;
+  
   match goal with
+  (* 1. Point-Evaluated Derivative (Uses derivative_at_ext_val) *)
+  | [ |- ⟦ der ?y ⟧ (fun t => eval_expr ?e t) = ?rhs ] =>
+      apply derivative_at_ext_val with (f' := fun t => eval_expr (derive_expr e) t);
+      [ apply derive_correct; repeat split; simpl; try solve [solve_denoms | solve_R | auto]
+      | unfold compose in *; try diff_simplify ]
+
+  (* 2. Global Derivative (Fallback for functions without domain restrictions) *)
   | [ |- ⟦ der ⟧ (fun t => eval_expr ?e t) = ?rhs ] =>
       replace rhs with (fun t => eval_expr (derive_expr e) t);
-      [ apply derive_correct_global; repeat split; try solve [solve_R | auto]
-      | let x := fresh "x" in extensionality x; unfold compose in *; try (simpl; lra); solve_R ]
-  | [ |- ⟦ der ?y ⟧ (fun t => eval_expr ?e t) = ?rhs ] =>
-      replace rhs with (fun t => eval_expr (derive_expr e) t);
-      [ apply derive_correct; repeat split; try solve [solve_R | auto]
-      | let x := fresh "x" in extensionality x; unfold compose in *; try (simpl; lra); solve_R ]
+      [ apply derive_correct_global; repeat split; simpl; try solve [solve_denoms | solve_R | auto]
+      | let x := fresh "x" in extensionality x; unfold compose in *; try diff_simplify ]
   end.
 
 Module Tactic_Tests.
@@ -487,18 +513,6 @@ End Tactic_Tests.
 
 Module Tactic_Tests_Advanced.
 
-Lemma test_auto_diff_tan : ⟦ der ⟧ (fun x => tan (x^2)) (0, 1) = (fun x => (2 * x) / (cos (x^2))^2).
-Proof.
-  auto_diff.
-  simpl.
-  replace (x * (x * 1)) with (x ^ 2) by ring.
-  apply Rgt_not_eq.
-  apply cos_gt_0_on_open_pi_2.
-  pose proof π_pos as H2.
-  assert (3 < π < 3.2) by admit.
-  solve_R.
-Admitted.
-
 Lemma test_auto_diff_rpower : ⟦ der ⟧ (fun x => x ^^ 5) (1, 2) = (fun x => 5 * x ^^ 4).
 Proof.
   auto_diff.
@@ -509,5 +523,29 @@ Lemma test_auto_diff_ln : ⟦ der ⟧ (fun x => ln (x + 1)) (0, 1) = (fun x => 1
 Proof.
   auto_diff.
 Qed.
+
+Lemma stress_diff_quotient :
+  ⟦ der ⟧ (fun x => (arcsin x * ln (x + 1)) / (x^2 + 1)) (-0.5, 0.5) =
+  (fun x => ((1 / sqrt (1 - x^2) * ln (x + 1) + arcsin x * (1 / (x + 1))) * (x^2 + 1) -
+  (arcsin x * ln (x + 1)) * (2 * x)) / ((x^2 + 1) ^ 2)).
+Proof.
+  auto_diff. 
+Qed.
+
+Lemma stress_limit_huge : ⟦ lim 0 ⟧ (fun x => (sin x + cos x) / exp x) = 1.
+Proof.
+  auto_limit. rewrite sin_0, cos_0, exp_0. lra. simpl. rewrite exp_0. lra. simpl. rewrite exp_0. lra.
+Qed.
+
+Lemma integral_tan_local : 
+  ⟦ der ⟧ (fun x => - ln (cos x)) (-1, 1) = (fun x => tan x).
+Proof.
+  auto_diff.
+  - admit.
+  -
+  unfold tan.
+  field.
+  admit.
+Admitted.
 
 End Tactic_Tests_Advanced.

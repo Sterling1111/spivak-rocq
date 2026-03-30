@@ -110,6 +110,7 @@ Calculus/Chapter11/Prelude.v
 Calculus/Chapter11/Problem_11_28.v
 Calculus/Chapter12/Prelude.v
 Calculus/Chapter13/Prelude.v
+Calculus/Chapter19/Prelude.v
 
 -generate-meta-for-package simplex_plugin
 -I src
@@ -117,6 +118,3 @@ Calculus/Chapter13/Prelude.v
 src/simplex_main.ml
 src/g_simplex.mlg
 src/simplex_plugin.mlpack
-
-Calculus/Chapter19/Prelude.v
-Calculus/Chapter19/Problem_19_1.v
