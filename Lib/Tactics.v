@@ -342,10 +342,22 @@ Ltac reify_expr x t :=
       | exp ?u  => let e := reify_expr x u in constr:(EExp e)
       | log ?u  => let e := reify_expr x u in constr:(ELog e)
       | ln ?u   => let e := reify_expr x u in constr:(ELog e)
-      | ?u ^^ ?r => 
-          lazymatch type of r with
-          | R => let e := reify_expr x u in constr:(ERpow e r)
-          | _ => fail "reify_expr: Expected real exponent for ^^"
+      | ?u ^^ ?v => 
+          let b := match v with | context[x] => constr:(true) | _ => constr:(false) end in
+          lazymatch b with
+          | true =>
+              let b2 := match u with | context[x] => constr:(true) | _ => constr:(false) end in
+              lazymatch b2 with
+              | true => 
+                  let t_mod := constr:(exp (v * log u)) in
+                  reify_expr x t_mod
+              | false =>
+                  let e := reify_expr x v in
+                  let df := constr:(Some (fun y:R => u ^^ y * log u)) in
+                  constr:(EApp (Rpower u) df e)
+              end
+          | false => 
+              let e := reify_expr x u in constr:(ERpow e v)
           end
       | ?u ^ ?n => let e := reify_expr x u in constr:(EPow e n)
       | ?h ?u =>
@@ -450,6 +462,8 @@ Ltac diff_simplify :=
   try field; 
   repeat split; 
   try solve_denoms.
+
+Hint Resolve derivative_Rpower_base : core.
 
 Ltac auto_diff :=
   intros;

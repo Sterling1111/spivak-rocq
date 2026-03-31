@@ -2829,6 +2829,8 @@ Proof.
   rewrite H8, H10. reflexivity.
 Qed.
 
+(*
+
 Lemma riemann_sum_bounded : forall (a b : ℝ) (bf : bounded_function_R a b) (P : partition a b) (c : list ℝ),
   let f := bf.(bounded_f a b) in
   is_tagging a b P c ->
@@ -2979,3 +2981,5 @@ Proof.
   simpl bounded_f in *.
   apply Rabs_def1; lra.
 Qed.
+
+*)

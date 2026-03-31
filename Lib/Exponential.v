@@ -821,6 +821,19 @@ Proof.
   - pose proof Rinv_0_lt_compat a H2. lra.
 Qed.
 
+Lemma Rpower_div : forall a b x, a > 0 -> b > 0 ->
+  (a / b) ^^ x = a ^^ x / b ^^ x.
+Proof.
+  intros a b x H1 H2.
+  replace (a / b) with (a * (1 / b)) by lra.
+  rewrite Rpower_mult_distr; auto. 2 : { apply Rdiv_pos_pos; lra. }
+  replace (a ^^ x / b ^^ x) with (a ^^ x * (1 / b ^^ x)) by lra.
+  f_equal.
+  rewrite Rpower_inv; auto.
+  replace (1 / b ^^ x) with (b ^^ 0 / b ^^ x) by (rewrite Rpower_0; auto; lra).
+  rewrite <- Rpower_minus; auto. f_equal. lra.
+Qed.
+
 Lemma floor_power_lower_bound :
   ∀ p : ℝ, p ≥ 0 → ∃ j : ℝ, j > 0 ∧ ∀ x : ℝ, x ≥ 1 → ⌊x⌋^^p ≥ j * x^^p.
 Proof.
@@ -1251,19 +1264,90 @@ Proof.
   solve_R.
 Qed.
 
-Lemma diff_quotient_Rpower_bound : forall f β h,
-  f 0 = 0 -> h > 0 -> |f h| >= h ^^ β -> |(f h - f 0) / h| >= h ^^ (β - 1).
+Lemma log_div_neq_0 : forall a b, a > 0 -> b > 0 -> a <> b -> log (a / b) <> 0.
 Proof.
-  intros f β h H1 H2 H3.
-  pose proof Rinv_pos h H2 as H4.
-  rewrite <- H1.
-  replace (f h - 0) with (f h) by lra.
-  unfold Rdiv. rewrite Rabs_mult.
-  replace (|/ h|) with (/ h) by solve_R.
-  rewrite <- Rpower_1 with (x := h) at 1; [|lra].
-  replace (f (h ^^ 1) - f (f 0)) with (f h).
-  2: { rewrite Rpower_1; [|lra]. rewrite H1. rewrite H1. lra. }
-  replace (h ^^ (β - 1)) with (h ^^ β * / h).
-  2: { rewrite Rpower_minus; [|lra]. unfold Rdiv. rewrite Rpower_1; [|lra]. reflexivity. }
-  solve_R.
+  intros a b H1 H2 H3 H4.
+  assert (H5 : exp (log (a / b)) = exp 0) by (f_equal; lra).
+  rewrite exp_0 in H5.
+  rewrite exp_log in H5.
+  - assert (H6 : a = a / b * b) by (field; lra). rewrite H5 in H6. lra.
+  - apply Rdiv_lt_0_compat; lra.
+Qed.
+
+Lemma log_inv : forall x,
+  x > 0 -> log (1 / x) = - log x.
+Proof.
+  intros x H1.
+  rewrite corollary_18_2; try lra.
+  rewrite log_1.
+  lra.
+Qed.
+
+Lemma exp_neg : forall x,
+  exp (- x) = 1 / exp x.
+Proof.
+  intros x.
+  unfold Rdiv.
+  rewrite Rmult_1_l.
+  apply Rmult_eq_reg_l with (exp x).
+  - rewrite <- theorem_18_3.
+    replace (x + - x) with 0 by lra.
+    rewrite exp_0.
+    field.
+    apply exp_neq_0.
+  - apply exp_neq_0.
+Qed.
+
+Lemma exp_minus : forall x y,
+  exp (x - y) = exp x / exp y.
+Proof.
+  intros x y.
+  unfold Rminus, Rdiv.
+  rewrite theorem_18_3.
+  rewrite exp_neg.
+  field.
+  apply exp_neq_0.
+Qed.
+
+Lemma log_e : log e = 1.
+Proof.
+  unfold e.
+  rewrite log_exp.
+  reflexivity.
+Qed.
+
+Lemma ln_e : ln e = 1.
+Proof.
+  unfold ln, log_.
+  rewrite log_e.
+  lra.
+Qed.
+
+Lemma exp_Rpower : forall x,
+  exp x = e ^^ x.
+Proof.
+  intros x.
+  unfold Rpower.
+  destruct (Rlt_dec 0 e) as [H1 | H1].
+  - rewrite log_e.
+    rewrite Rmult_1_r.
+    reflexivity.
+  - pose proof exp_pos 1 as H2.
+    unfold e in H1. lra.
+Qed.
+
+Lemma log_e_power : forall x,
+  log (e ^^ x) = x.
+Proof.
+  intros x.
+  rewrite <- exp_Rpower.
+  apply log_exp.
+Qed.
+
+Lemma ln_exp : forall x,
+  ln (exp x) = x.
+Proof.
+  intros x.
+  rewrite ln_eq_log.
+  apply log_exp.
 Qed.
