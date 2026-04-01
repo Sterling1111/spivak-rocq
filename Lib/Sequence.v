@@ -999,8 +999,109 @@ Proof.
       apply H5. apply H3.
 Qed.
 
+Lemma cauchy_bounded : forall a,
+  cauchy_sequence a -> bounded a.
+Proof.
+  intros a H1. unfold cauchy_sequence in H1. specialize (H1 1 ltac:(lra)) as [N1 H2].
+  pose proof INR_unbounded N1 as [N2 H3]. split.
+  - pose proof exists_min_of_sequence_on_interval a 0 (S N2) ltac:(lia) as [n1 [_ H4]].
+    exists (Rmin (a n1) (a (S N2) - 1)). intros n. destruct (le_lt_dec n (S N2)) as [H5 | H5].
+    + specialize (H4 n ltac:(lia)). apply Rle_trans with (r2 := a n1); [apply Rmin_l | lra].
+    + apply Rle_trans with (r2 := a (S N2) - 1). solve_R.
+      assert (H6 : INR n > N1).
+      { apply Rlt_trans with (r2 := INR N2); [lra | apply lt_INR; lia]. }
+      assert (H7 : INR (S N2) > N1).
+      { apply Rlt_trans with (r2 := INR N2); [lra | apply lt_INR; lia]. }
+      specialize (H2 n (S N2) H6 H7).
+      solve_abs.
+  - pose proof exists_max_of_sequence_on_interval a 0 (S N2) ltac:(lia) as [n1 [_ H4]].
+    exists (Rmax (a n1) (a (S N2) + 1)). intros n. destruct (le_lt_dec n (S N2)) as [H5 | H5].
+    + specialize (H4 n ltac:(lia)). apply Rle_ge. apply Rle_trans with (r2 := a n1); [lra | apply Rmax_l].
+    + apply Rle_ge. apply Rle_trans with (r2 := a (S N2) + 1). 2 : apply Rmax_r.
+      assert (H6 : INR n > N1).
+      { apply Rlt_trans with (r2 := INR N2); [lra | apply lt_INR; lia]. }
+      assert (H7 : INR (S N2) > N1).
+      { apply Rlt_trans with (r2 := INR N2); [lra | apply lt_INR; lia]. }
+      specialize (H2 n (S N2) H6 H7).
+      solve_abs.
+Qed.
+
+Lemma cauchy_subseq_convergent : forall a sub,
+  cauchy_sequence a -> subsequence sub a -> convergent_sequence sub -> convergent_sequence a.
+Proof.
+  intros a sub H1 [f [H2 H3]] [L H4]. exists L. intros ε H5.
+  specialize (H1 (ε/2) ltac:(lra)) as [N1 H6]. specialize (H4 (ε/2) ltac:(lra)) as [N2 H7].
+  exists (Rmax N1 N2). intros n H8. pose proof INR_unbounded (Rmax N1 N2) as [k H9].
+  assert (H10 : forall m, (f m >= m)%nat).
+  { intros m. induction m as [| m IH]; try lia. pose proof H2 m (S m) ltac:(solve_R) as H10. apply INR_lt in H10. lia. }
+  specialize (H10 k). assert (H11 : INR (f k) > N1).
+  { apply Rlt_le_trans with (r2 := INR k); [solve_max | apply le_INR; lia]. }
+  assert (H12 : INR k > N2) by solve_max.
+  specialize (H6 n (f k) ltac:(apply Rmax_Rgt in H8; lra) H11).
+  specialize (H7 k H12). rewrite H3 in H7. solve_abs.
+Qed.
+
 Theorem cauchy_convergence_criterion : forall a,
   convergent_sequence a <-> cauchy_sequence a.
 Proof.
-  
-Admitted.
+  intros a. split.
+  - intros [L H1] ε H2. specialize (H1 (ε/2) ltac:(lra)) as [N H3].
+    exists N. intros n m H4 H5.
+    pose proof (H3 n H4) as H6. pose proof (H3 m H5) as H7.
+    solve_abs.
+  - intros H1. pose proof cauchy_bounded a H1 as H2.
+    pose proof monotone_subsequence_theorem a as [sub [H3 H4]].
+    apply cauchy_subseq_convergent with (sub := sub); auto.
+    apply Monotonic_Sequence_Theorem.
+    destruct H4 as [H4 | H4]; [left | right]; split; auto.
+    + unfold bounded in H2; destruct H2 as [_ H2].
+      unfold bounded_above in *. destruct H2 as [UB H2].
+      exists UB. intros n. destruct H3 as [f [_ H3]]. rewrite H3. apply H2.
+    + unfold bounded in H2; destruct H2 as [H2 _].
+      unfold bounded_below in *. destruct H2 as [LB H2].
+      exists LB. intros n. destruct H3 as [f [_ H3]]. rewrite H3. apply H2.
+Qed.
+
+Theorem theorem_22_1 : forall f c L,
+  (forall a, (forall n, a n <> c) -> ⟦ lim ⟧ a = c -> 
+     ⟦ lim ⟧ (fun n => f (a n)) = L) <->
+    ⟦ lim c ⟧ f = L.
+Proof.
+  apply limit_function_sequence_characterization.
+Qed.
+
+Theorem theorem_22_2 : forall (a : sequence),
+  (nondecreasing a /\ bounded_above a) \/ (nonincreasing a /\ bounded_below a) -> convergent_sequence a.
+Proof.
+  intros a [[H1 H2] | [H3 H4]].
+  - apply monotone_convergence_nondecreasing; auto.
+  - apply monotone_convergence_nonincreasing; auto.
+Qed.
+
+Lemma lemma_22_1 : forall a,
+  exists sub, subsequence sub a /\ (nondecreasing sub \/ nonincreasing sub).
+Proof.
+  apply monotone_subsequence_theorem.
+Qed.
+
+Corollary corollary_22_1 : forall a,
+  bounded a -> exists sub, subsequence sub a /\ convergent_sequence sub.
+Proof.
+  intros a H1. pose proof monotone_subsequence_theorem a as [sub [H2 H3]].
+  exists sub. split.
+  - apply H2.
+  - apply Monotonic_Sequence_Theorem.
+    destruct H3 as [H3 | H3]; [left | right]; split; auto.
+    + unfold bounded in H1; destruct H1 as [_ H1].
+      unfold bounded_above in *. destruct H1 as [UB H1].
+      exists UB. intros n. destruct H2 as [f [_ H2]]. rewrite H2. apply H1.
+    + unfold bounded in H1; destruct H1 as [H1 _].
+      unfold bounded_below in *. destruct H1 as [LB H1].
+      exists LB. intros n. destruct H2 as [f [_ H2]]. rewrite H2. apply H1.
+Qed.
+
+Theorem theorem_22_3 : forall a,
+  convergent_sequence a <-> cauchy_sequence a.
+Proof.
+  apply cauchy_convergence_criterion.
+Qed.

@@ -888,6 +888,24 @@ Definition indefinite_integral_or_zero (f F : ℝ -> ℝ) : Prop :=
 Definition indefinite_integral (f : ℝ -> ℝ) : ℝ -> ℝ :=
   epsilon (inhabits (fun _ => 0)) (indefinite_integral_or_zero f).
 
+Definition improper_integral_pinf (a : ℝ) (f : ℝ -> ℝ) (L : ℝ) : Prop :=
+  (∀ x, x > a -> integrable_on a x f) /\ ⟦ lim ∞ ⟧ (fun x => definite_integral a x f) = L.
+
+Definition improper_integral_ninf (b : ℝ) (f : ℝ -> ℝ) (L : ℝ) : Prop :=
+  (∀ x, x < b -> integrable_on x b f) /\ ⟦ lim -∞ ⟧ (fun x => definite_integral x b f) = L.
+
+Definition improper_integral_inf (f : ℝ -> ℝ) (L : ℝ) : Prop :=
+  ∃ c L1 L2, improper_integral_ninf c f L1 /\ improper_integral_pinf c f L2 /\ L = L1 + L2.
+
+Definition improper_integrable_pinf (a : ℝ) (f : ℝ -> ℝ) : Prop :=
+  ∃ L, improper_integral_pinf a f L.
+
+Definition improper_integrable_ninf (b : ℝ) (f : ℝ -> ℝ) : Prop :=
+  ∃ L, improper_integral_ninf b f L.
+
+Definition improper_integrable_inf (f : ℝ -> ℝ) : Prop :=
+  ∃ L, improper_integral_inf f L.
+
 Module IntegralNotations.
 
   Declare Scope integral_scope.
@@ -912,7 +930,16 @@ Module IntegralNotations.
     (at level 70, f at level 0, D at level 0, no associativity, format "⟦  'int'  ⟧  f  D  =  F") : integral_scope.
 
   Notation "∫ f D '=' F" := (antiderivative_on f F D)
-    (at level 9, f at level 0, D at level 0, F at level 0, no associativity, format "∫  f  D  '='  F") : integral_scope.  
+    (at level 9, f at level 0, D at level 0, F at level 0, no associativity, format "∫  f  D  '='  F") : integral_scope.
+    
+  Notation "∫ a '∞' f '=' L" := (improper_integral_pinf a f L)
+    (at level 9, f at level 0, a at level 0, L at level 0, format "∫  a  '∞'  f  '='  L") : integral_scope.
+
+  Notation "∫ '-∞' b f '=' L" := (improper_integral_ninf b f L)
+    (at level 9, f at level 0, b at level 0, L at level 0, format "∫  '-∞'  b  f  '='  L") : integral_scope.
+
+  Notation "∫ '-∞' '∞' f '=' L" := (improper_integral_inf f L)
+    (at level 9, f at level 0, L at level 0, format "∫  '-∞'  '∞'  f  '='  L") : integral_scope.
 
   Open Scope integral_scope.
 
