@@ -876,6 +876,35 @@ Definition definite_integral a b (f : ℝ -> ℝ) : ℝ :=
                end
   end.
 
+Definition is_riemann_integral (a b : ℝ) (f : ℝ -> ℝ) (L : ℝ) : Prop :=
+  forall ε, ε > 0 ->
+  exists δ, δ > 0 /\
+  forall (P : partition a b) (c : list ℝ),
+    is_tagging a b P c ->
+    (forall i, (i < length (P.(points a b)) - 1)%nat -> (P.(points a b)).[(i+1)] - (P.(points a b)).[i] < δ) ->
+     | Riemann_sum a b f P c - L | < ε.
+
+Definition riemann_integrable_on (a b : ℝ) (f : ℝ -> ℝ) : Prop :=
+  a = b \/ (a < b /\ exists L, is_riemann_integral a b f L).
+
+Definition riemann_integral_or_zero (a b : ℝ) (f : ℝ -> ℝ) (L : ℝ) : Prop :=
+  is_riemann_integral a b f L \/ (~ (exists L2, is_riemann_integral a b f L2) /\ L = 0).
+
+Definition riemann_integral_val (a b : ℝ) (f : ℝ -> ℝ) : ℝ :=
+  epsilon (inhabits 0) (riemann_integral_or_zero a b f).
+
+Definition riemann_integral (a b : ℝ) (f : ℝ -> ℝ) : ℝ :=
+  match Rle_dec a b with
+  | left _ => match Rlt_dec a b with
+              | left _ => riemann_integral_val a b f
+              | right _ => 0
+              end
+  | right _ => - (riemann_integral_val b a f)
+  end.
+
+Definition darboux_integral (a b : ℝ) (f : ℝ -> ℝ) : ℝ :=
+  definite_integral a b f.
+
 Definition antiderivative (f F : ℝ -> ℝ) : Prop :=
   ⟦ der ⟧ F = f.
 
@@ -2855,3 +2884,50 @@ Proof.
   pose proof definite_integral_eval_general (f ∘ g ⋅ g') (F ∘ g) a b H7 H9 as H10.
   rewrite H8, H10. reflexivity.
 Qed.
+
+Lemma darboux_implies_riemann : forall (a b : ℝ) (f : ℝ -> ℝ) (L : ℝ),
+  a < b -> integrable_on a b f -> L = definite_integral a b f -> is_riemann_integral a b f L.
+Proof.
+  intros a b f L H1 H2 H3.
+  unfold is_riemann_integral.
+  intros ε H4.
+  pose proof (integral_equiv a b f ltac:(lra) H2) as [bf [H5 [H6 H7]]].
+  pose proof (theorem_13_2_a a b bf ltac:(lra)) as [H8 H9].
+  assert (H10 : integrable_on a b (bounded_f a b bf)).
+  { rewrite H5. exact H2. }
+  specialize (H8 H10 (ε / 2) ltac:(lra)) as [P0 H11].
+  assert (exists M, forall x, x ∈ [a, b] -> |f x| <= M) as [M H12] by admit.
+  set (r := 2 * M).
+  destruct (Req_dec r 0) as [H13 | H13].
+  - exists 1. split; try lra. intros P c H14 H15.
+    admit.
+  - set (δ := (ε / 2) / (r * INR (length (points a b P0) - 1))).
+    exists (Rmin δ 1). split.
+    + apply Rmin_pos; try lra. apply Rdiv_pos_pos; try lra.
+      apply Rmult_lt_0_compat; try lra. unfold r. specialize (H12 a ltac:(solve_R)). admit.
+      pose proof (partition_length a b P0) as H14. apply INR_ge in H14. admit.
+    + intros P c H14 H15.
+      assert (H16 : Rabs (Riemann_sum a b f P c - L) <= Rabs (U(bf, P) - L(bf, P))).
+      { admit. }
+      assert (H17 : U(bf, P) - L(bf, P) < ε).
+      { admit. }
+      admit.
+Admitted.
+
+Lemma riemann_implies_darboux : forall (a b : ℝ) (f : ℝ -> ℝ) (L : ℝ),
+  a < b -> is_riemann_integral a b f L -> integrable_on a b f /\ L = definite_integral a b f.
+Proof.
+  intros a b f L H1 H2.
+  split.
+  - admit.
+  - admit.
+Admitted.
+
+Theorem darboux_riemann_equiv : forall a b f,
+  darboux_integral a b f = riemann_integral a b f.
+Proof.
+  intros a b f.
+  destruct (Rlt_dec a b) as [H1 | H1].
+  - admit.
+  - admit.
+Admitted.
