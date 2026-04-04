@@ -430,3 +430,13 @@ Proof.
        + simpl in *. inversion H4. subst. inversion H2. subst. constructor; auto.
        + simpl in *. inversion H4. subst. constructor; auto.
 Qed.
+
+Lemma insert_Sorted_Rlt_In : forall (l : list ℝ) (r x : ℝ),
+  List.In x (insert_Sorted_Rlt r l) <-> x = r \/ List.In x l.
+Proof.
+  intros l r x. split; intros H1.
+  - apply In_l_In_insert_Sorted_Rlt' in H1. tauto.
+  - destruct H1 as [H1 | H1].
+    + subst. apply insert_Sorted_Rlt_in.
+    + apply In_l_In_insert_Sorted_Rlt; auto.
+Qed.

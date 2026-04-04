@@ -203,9 +203,15 @@ Proof.
   - subst. apply RiemannInt_P7.
 Qed.
 
-Lemma integrable_on_implies_Riemann : forall f a b,
+Lemma integrable_on_implies_Riemann_integrable : forall f a b,
   a <= b -> Integral.integrable_on a b f -> 
   {pr : Riemann_integrable f a b | True}.
+Proof.
+Admitted.
+
+Lemma Riemann_integrable_implies_integrable : forall f a b,
+  a <= b -> {pr : Riemann_integrable f a b | True} ->
+    a <= b -> Integral.integrable_on a b f.
 Proof.
 Admitted.
 
