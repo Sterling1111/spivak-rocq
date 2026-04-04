@@ -1266,46 +1266,6 @@ Proof.
     pose proof uniform_continuity_interval_union f a (b - δ'/2) b ε H15 H2' H3 H13 H12 as [δ3 [H16 H17]]. exists δ3. split; auto.
 Qed.
 
-Definition bounded_below_on (f : ℝ -> ℝ) (A : Ensemble ℝ) :=
-  has_lower_bound (fun y => exists x, x ∈ A /\ y = f x).
-
-Definition unbounded_below_on (f : ℝ -> ℝ) (A : Ensemble ℝ) :=
-  ~ bounded_below_on f A.
-
-Definition bounded_above_on (f : ℝ -> ℝ) (A : Ensemble ℝ) :=
-  has_upper_bound (fun y => exists x, x ∈ A /\ y = f x).
-
-Definition unbounded_above_on (f : ℝ -> ℝ) (A : Ensemble ℝ) :=
-  ~ bounded_above_on f A.
-
-Definition bounded_below (f : ℝ -> ℝ) :=
-  bounded_below_on f ℝ.
-
-Definition unbounded_below (f : ℝ -> ℝ) :=
-  unbounded_below_on f ℝ.
-
-Definition bounded_above (f : ℝ -> ℝ) :=
-  bounded_above_on f ℝ.
-
-Definition unbounded_above (f : ℝ -> ℝ) :=
-  unbounded_above_on f ℝ.
-
-Definition bounded_on (f : ℝ -> ℝ) (A : Ensemble ℝ) :=
-  has_lower_bound (fun y => exists x, x ∈ A /\ y = f x) /\
-  has_upper_bound (fun y => exists x, x ∈ A /\ y = f x).
-
-Lemma unbounded_above_exists : forall f,
-  unbounded_above f -> forall M, exists x, f x > M.
-Proof.
-  intros f H1 M. 
-  apply NNPP; intro H2.
-  apply H1.
-  exists M.
-  intros x [x0 [_ ->]].
-  apply Rnot_lt_le. intros H3. apply H2.
-  exists x0. auto.
-Qed.
-
 Lemma continuous_on_interval_is_bounded : forall f a b,
   a <= b -> continuous_on f [a, b] -> bounded_on f [a, b].
 Proof.
@@ -1447,4 +1407,98 @@ Proof.
     specialize (H5 x H11).
     assert (H12 : 0 ∈ [p, q]) by (unfold p, q; solve_R).
     specialize (H9 0 H12). lra.
+Qed.
+
+Lemma continuous_on_imp_exists_local_glb : forall f a b c,
+  a < b ->
+  c ∈ [a, b] ->
+  continuous_on f [a, b] ->
+  exists m, forall h,
+    (h ∈ (0, b - c) -> is_glb (λ y : ℝ, ∃ x : ℝ, x ∈ [c, c + h] /\ y = f x) (m h)) /\
+    (h ∈ (a - c, 0) -> is_glb (λ y : ℝ, ∃ x : ℝ, x ∈ [c + h, c] /\ y = f x) (m h)).
+Proof.
+  intros f a b c H1 H2 H3.
+  assert (forall h, h ∈ (0, b - c) -> { inf | is_glb (λ y : ℝ, ∃ x : ℝ, x ∈ [c, c + h] /\ y = f x) inf} ) as H4.
+  {
+    pose proof interval_has_inf as H4. intros h H5.
+    assert (continuous_on f [c, c + h]) as H6.
+    { apply continuous_on_subset with (A2 := [a, b]); auto. intros x H6. solve_R. }
+    pose proof continuous_on_interval_is_bounded f c (c + h) ltac:(solve_R) H6 as H7.
+    specialize (H4 c (c + h) f ltac:(solve_R) H7) as [sup H8]. exists sup; auto. 
+  }
+  assert (forall h, h ∈ (a - c, 0) -> { inf | is_glb (λ y : ℝ, ∃ x : ℝ, x ∈ [c + h, c] /\ y = f x) inf }) as H5.
+  {
+    pose proof interval_has_inf as H5. intros h H6.
+    assert (continuous_on f [c + h, c]) as H7.
+    { apply continuous_on_subset with (A2 := [a, b]); auto. intros x H7. solve_R. }
+    pose proof continuous_on_interval_is_bounded f (c + h) c ltac:(solve_R) H7 as H8.
+    specialize (H5 (c + h) c f ltac:(solve_R) H8) as [inf H9]. exists inf; auto. 
+  }
+  assert (H6 : forall h, ~h <= (a - c) /\ h < 0 -> h ∈ (λ x : ℝ, a - c < x < 0)) by solve_R.
+  assert (H7 : forall h, ~h >= (b - c) /\ h > 0 -> h ∈ (λ x : ℝ, 0 < x < b - c)) by solve_R. 
+  set (m := λ h, match (Rle_dec h (a - c)) with 
+                 | left _ => 0
+                 | right H8 => match (Rlt_dec h 0) with 
+                 | left H9 => proj1_sig (H5 h (H6 h (conj H8 H9)))
+                 | right H9 => match (Rge_dec h (b - c)) with 
+                 | left _ => 0
+                 | right H10 => match (Rgt_dec h 0) with
+                 | left H11 => proj1_sig (H4 h (H7 h (conj H10 H11)))
+                 | right H11 => 0
+                 end end end
+                 end).
+  exists m. intros h; split; intros [H8 H9]; unfold m; clear m.
+  - destruct (Rle_dec h (a - c)) as [H10 | H10]; destruct (Rlt_dec h 0) as [H11 | H11]; destruct (Rge_dec h (b - c)) as [H12 | H12]; destruct (Rgt_dec h 0) as [H13 | H13]; solve_R.
+    -- assert (h > 0 /\ h < 0 -> False) as H14. { lra. } exfalso. apply H14. auto.
+    -- assert (h > 0 /\ h < 0 -> False) as H14. { lra. } exfalso. apply H14. auto.
+    -- apply (proj2_sig (H4 h (H7 h (conj H12 H13)))).
+  -  destruct (Rle_dec h (a - c)) as [H10 | H10]; destruct (Rlt_dec h 0) as [H11 | H11]; destruct (Rge_dec h (b - c)) as [H12 | H12]; destruct (Rgt_dec h 0) as [H13 | H13]; solve_R.
+     apply (proj2_sig (H5 h (H6 h (conj H10 H11)))).
+Qed.
+
+Lemma continuous_on_imp_exists_local_lub : forall f a b c,
+  a < b ->
+  c ∈ [a, b] ->
+  continuous_on f [a, b] ->
+  exists M, forall h,
+    (h ∈ (0, b - c) -> is_lub (λ y : ℝ, ∃ x : ℝ, x ∈ [c, c + h] /\ y = f x) (M h)) /\
+    (h ∈ (a - c, 0) -> is_lub (λ y : ℝ, ∃ x : ℝ, x ∈ [c + h, c] /\ y = f x) (M h)).
+Proof.
+  intros f a b c H1 H2 H3.
+  assert (forall h, h ∈ (0, b - c) -> { sup | is_lub (λ y : ℝ, ∃ x : ℝ, x ∈ [c, c + h] /\ y = f x) sup} ) as H4.
+  {
+    pose proof interval_has_sup as H4. intros h H5.
+    assert (continuous_on f [c, c + h]) as H6.
+    { apply continuous_on_subset with (A2 := [a, b]); auto. intros x H6. solve_R. }
+    pose proof continuous_on_interval_is_bounded f c (c + h) ltac:(solve_R) H6 as H7.
+    specialize (H4 c (c + h) f ltac:(solve_R) H7) as [sup H8]. exists sup; auto. 
+  }
+  assert (forall h, h ∈ (a - c, 0) -> { sup | is_lub (λ y : ℝ, ∃ x : ℝ, x ∈ [c + h, c] /\ y = f x) sup }) as H5.
+  {
+    pose proof interval_has_sup as H5. intros h H6.
+    assert (continuous_on f [c + h, c]) as H7.
+    { apply continuous_on_subset with (A2 := [a, b]); auto. intros x H7. solve_R. }
+    pose proof continuous_on_interval_is_bounded f (c + h) c ltac:(solve_R) H7 as H8.
+    specialize (H5 (c + h) c f ltac:(solve_R) H8) as [sup H9]. exists sup; auto. 
+  }
+  assert (H6 : forall h, ~h <= (a - c) /\ h < 0 -> h ∈ (λ x : ℝ, a - c < x < 0)) by solve_R.
+  assert (H7 : forall h, ~h >= (b - c) /\ h > 0 -> h ∈ (λ x : ℝ, 0 < x < b - c)) by solve_R. 
+  set (M := λ h, match (Rle_dec h (a - c)) with 
+                 | left _ => 0
+                 | right H8 => match (Rlt_dec h 0) with 
+                 | left H9 => proj1_sig (H5 h (H6 h (conj H8 H9)))
+                 | right H9 => match (Rge_dec h (b - c)) with 
+                 | left _ => 0
+                 | right H10 => match (Rgt_dec h 0) with
+                 | left H11 => proj1_sig (H4 h (H7 h (conj H10 H11)))
+                 | right H11 => 0
+                 end end end
+                 end).
+  exists M. intros h; split; intros [H8 H9]; unfold M; clear M.
+  - destruct (Rle_dec h (a - c)) as [H10 | H10]; destruct (Rlt_dec h 0) as [H11 | H11]; destruct (Rge_dec h (b - c)) as [H12 | H12]; destruct (Rgt_dec h 0) as [H13 | H13]; solve_R.
+    -- assert (h > 0 /\ h < 0 -> False) as H14. { lra. } exfalso. apply H14. auto.
+    -- assert (h > 0 /\ h < 0 -> False) as H14. { lra. } exfalso. apply H14. auto.
+    -- apply (proj2_sig (H4 h (H7 h (conj H12 H13)))).
+  -  destruct (Rle_dec h (a - c)) as [H10 | H10]; destruct (Rlt_dec h 0) as [H11 | H11]; destruct (Rge_dec h (b - c)) as [H12 | H12]; destruct (Rgt_dec h 0) as [H13 | H13]; solve_R.
+     apply (proj2_sig (H5 h (H6 h (conj H10 H11)))).
 Qed.

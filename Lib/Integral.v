@@ -2379,88 +2379,10 @@ Theorem FTC1 : ∀ f a b,
   a < b -> continuous_on f [a, b] -> ⟦ der ⟧ (λ x, ∫ a x f) [a, b] = f.
 Proof.
   intros f a b H1 H3 c H4. set (F := λ x, ∫ a x f).
-  assert (exists m, forall h, (h ∈ (0, b - c) -> is_glb (λ y : ℝ, ∃ x : ℝ, x ∈ [c, c + h] /\ y = f x) (m h)) /\ 
-                         (h ∈ (a - c, 0) -> is_glb (λ y : ℝ, ∃ x : ℝ, x ∈ [c + h, c] /\ y = f x) (m h))) as [m H5].
-  {
-    assert (forall h, h ∈ (0, b - c) -> { inf | is_glb (λ y : ℝ, ∃ x : ℝ, x ∈ [c, c + h] /\ y = f x) inf} ) as H5.
-    {
-      pose proof interval_has_inf as H5. intros h H6.
-      assert (continuous_on f [c, c + h]) as H7.
-      { apply continuous_on_subset with (A2 := [a, b]); auto. intros x H7. solve_R. }
-      pose proof continuous_on_interval_is_bounded f c (c + h) ltac:(solve_R) H7 as H8.
-      specialize (H5 c (c + h) f ltac:(solve_R) H8) as [sup H9]. exists sup; auto. 
-    }
-    assert (forall h, h ∈ (a - c, 0) -> { inf | is_glb (λ y : ℝ, ∃ x : ℝ, x ∈ [c + h, c] /\ y = f x) inf }) as H6.
-    {
-      pose proof interval_has_inf as H6. intros h H7.
-      assert (continuous_on f [c + h, c]) as H8.
-      { apply continuous_on_subset with (A2 := [a, b]); auto. intros x H8. solve_R. }
-      pose proof continuous_on_interval_is_bounded f (c + h) c ltac:(solve_R) H8 as H9.
-      specialize (H6 (c + h) c f ltac:(solve_R) H9) as [inf H10]. exists inf; auto. 
-    }
-    assert (H7 : forall h, ~h <= (a - c) /\ h < 0 -> h ∈ (λ x : ℝ, a - c < x < 0)) by solve_R.
-    assert (H8 : forall h, ~h >= (b - c) /\ h > 0 -> h ∈ (λ x : ℝ, 0 < x < b - c)) by solve_R. 
-    set (m := λ h, match (Rle_dec h (a - c)) with 
-                   | left _ => 0
-                   | right H9 => match (Rlt_dec h 0) with 
-                   | left H10 => proj1_sig (H6 h (H7 h (conj H9 H10)))
-                   | right H10 => match (Rge_dec h (b - c)) with 
-                   | left _ => 0
-                   | right H11 => match (Rgt_dec h 0) with
-                   | left H12 => proj1_sig (H5 h (H8 h (conj H11 H12)))
-                   | right H12 => 0
-                   end end end
-                   end).
-    exists m. intros h; split; intros [H9 H10]; unfold m; clear m.
-    - destruct (Rle_dec h (a - c)) as [H11 | H11]; destruct (Rlt_dec h 0) as [H12 | H12]; destruct (Rge_dec h (b - c)) as [H13 | H13]; destruct (Rgt_dec h 0) as [H14 | H14]; solve_R.
-      -- assert (h > 0 /\ h < 0 -> False) as H15. { lra. } exfalso. apply H15. auto.
-      -- assert (h > 0 /\ h < 0 -> False) as H15. { lra. } exfalso. apply H15. auto.
-      -- apply (proj2_sig (H5 h (H8 h (conj H13 H14)))).
-    -  destruct (Rle_dec h (a - c)) as [H11 | H11]; destruct (Rlt_dec h 0) as [H12 | H12]; destruct (Rge_dec h (b - c)) as [H13 | H13]; destruct (Rgt_dec h 0) as [H14 | H14]; solve_R.
-       apply (proj2_sig (H6 h (H7 h (conj H11 H12)))).
-  }
-  assert (exists M, forall h, (h ∈ (0, b - c) -> is_lub (λ y : ℝ, ∃ x : ℝ, x ∈ [c, c + h] /\ y = f x) (M h)) /\ 
-                         (h ∈ (a - c, 0) -> is_lub (λ y : ℝ, ∃ x : ℝ, x ∈ [c + h, c] /\ y = f x) (M h))) as [M H6].
-  {
-    assert (forall h, h ∈ (0, b - c) -> { sup | is_lub (λ y : ℝ, ∃ x : ℝ, x ∈ [c, c + h] /\ y = f x) sup} ) as H6.
-    {
-      pose proof interval_has_sup as H6. intros h H7.
-      assert (continuous_on f [c, c + h]) as H8.
-      { apply continuous_on_subset with (A2 := [a, b]); auto. intros x H8. solve_R. }
-      pose proof continuous_on_interval_is_bounded f c (c + h) ltac:(solve_R) H8 as H9.
-      specialize (H6 c (c + h) f ltac:(solve_R) H9) as [sup H10]. exists sup; auto. 
-    }
-    assert (forall h, h ∈ (a - c, 0) -> { sup | is_lub (λ y : ℝ, ∃ x : ℝ, x ∈ [c + h, c] /\ y = f x) sup }) as H7.
-    {
-      pose proof interval_has_sup as H7. intros h H8.
-      assert (continuous_on f [c + h, c]) as H9.
-      { apply continuous_on_subset with (A2 := [a, b]); auto. intros x H9. solve_R. }
-      pose proof continuous_on_interval_is_bounded f (c + h) c ltac:(solve_R) H9 as H10.
-      specialize (H7 (c + h) c f ltac:(solve_R) H10) as [sup H11]. exists sup; auto. 
-    }
-    assert (H8 : forall h, ~h <= (a - c) /\ h < 0 -> h ∈ (λ x : ℝ, a - c < x < 0)). 
-    { intros h H8. unfold Ensembles.In in *. lra. }
-    assert (H9 : forall h, ~h >= (b - c) /\ h > 0 -> h ∈ (λ x : ℝ, 0 < x < b - c)).
-    { intros h H9. unfold Ensembles.In in *. lra. }
-    set (M := λ h, match (Rle_dec h (a - c)) with 
-                   | left _ => 0
-                   | right H10 => match (Rlt_dec h 0) with 
-                   | left H11 => proj1_sig (H7 h (H8 h (conj H10 H11)))
-                   | right H11 => match (Rge_dec h (b - c)) with 
-                   | left _ => 0
-                   | right H12 => match (Rgt_dec h 0) with
-                   | left H13 => proj1_sig (H6 h (H9 h (conj H12 H13)))
-                   | right H13 => 0
-                   end end end
-                   end).
-    exists M. intros h; split; intros [H10 H11]; unfold Ensembles.In in *; unfold M; clear M.
-    - destruct (Rle_dec h (a - c)) as [H12 | H12]; destruct (Rlt_dec h 0) as [H13 | H13]; destruct (Rge_dec h (b - c)) as [H14 | H14]; destruct (Rgt_dec h 0) as [H15 | H15]; solve_R.
-      -- assert (h > 0 /\ h < 0 -> False) as H16. { lra. } exfalso. apply H16. auto.
-      -- assert (h > 0 /\ h < 0 -> False) as H16. { lra. } exfalso. apply H16. auto.
-      -- apply (proj2_sig (H6 h (H9 h (conj H14 H15)))).
-    - destruct (Rle_dec h (a - c)) as [H12 | H12]; destruct (Rlt_dec h 0) as [H13 | H13]; destruct (Rge_dec h (b - c)) as [H14 | H14]; destruct (Rgt_dec h 0) as [H15 | H15]; solve_R.
-       apply (proj2_sig (H7 h (H8 h (conj H12 H13)))).
-  }
+  
+  pose proof continuous_on_imp_exists_local_glb f a b c H1 H4 H3 as [m H5].
+  pose proof continuous_on_imp_exists_local_lub f a b c H1 H4 H3 as [M H6].
+  
   assert (H9 : forall h, h ∈ (0, b - c) -> m h <= (F (c + h) - F c) / h <= M h).
   {
     intros h' H9. unfold F in *. replace (∫ a (c + h') f - ∫ a c f) with (∫ c (c + h') f) in *.
@@ -2885,33 +2807,41 @@ Proof.
   rewrite H8, H10. reflexivity.
 Qed.
 
+Lemma Riemann_sum_lower_bound : forall (a b : ℝ) (bf : bounded_function_R a b) P c,
+  let f := bounded_f a b bf in
+  is_tagging a b P c -> L(bf, P) <= Riemann_sum a b f P c.
+Proof.
+  intros a b bf P c f H1.
+Admitted.
+
+Lemma Riemann_sum_upper_bound : forall (a b : ℝ) (bf : bounded_function_R a b) P c,
+  is_tagging a b P c -> Riemann_sum a b (bounded_f a b bf) P c <= U(bf, P).
+Proof.
+Admitted.
+
+Lemma Riemann_integral_bound : forall (a b : ℝ) (bf : bounded_function_R a b) P L,
+  let f := bounded_f a b bf in
+  a < b -> integrable_on a b f -> L = ∫ a b f ->
+  L(bf, P) <= L /\ L <= U(bf, P).
+Proof.
+  intros a b bf P L f H1 H2 H3.
+  split.
+  - rewrite H3. apply (integral_bound a b bf P H1 H2).
+  - rewrite H3. apply (integral_bound a b bf P H1 H2).
+Qed.
+
+Lemma darboux_mesh_bound : forall (a b : ℝ) (bf : bounded_function_R a b) (P0 P : partition a b) (M δ : ℝ),
+  (forall x, x ∈ [a, b] -> |bounded_f a b bf x| <= M) ->
+  δ > 0 ->
+  (forall i, (i < length (points a b P) - 1)%nat -> (points a b P).[(i+1)] - (points a b P).[i] < δ) ->
+  U(bf, P) - L(bf, P) <= U(bf, P0) - L(bf, P0) + δ * (2 * M * INR (length (points a b P0) - 1)).
+Proof.
+Admitted.
+
 Lemma darboux_implies_riemann : forall (a b : ℝ) (f : ℝ -> ℝ) (L : ℝ),
   a < b -> integrable_on a b f -> L = definite_integral a b f -> is_riemann_integral a b f L.
 Proof.
   intros a b f L H1 H2 H3.
-  unfold is_riemann_integral.
-  intros ε H4.
-  pose proof (integral_equiv a b f ltac:(lra) H2) as [bf [H5 [H6 H7]]].
-  pose proof (theorem_13_2_a a b bf ltac:(lra)) as [H8 H9].
-  assert (H10 : integrable_on a b (bounded_f a b bf)).
-  { rewrite H5. exact H2. }
-  specialize (H8 H10 (ε / 2) ltac:(lra)) as [P0 H11].
-  assert (exists M, forall x, x ∈ [a, b] -> |f x| <= M) as [M H12] by admit.
-  set (r := 2 * M).
-  destruct (Req_dec r 0) as [H13 | H13].
-  - exists 1. split; try lra. intros P c H14 H15.
-    admit.
-  - set (δ := (ε / 2) / (r * INR (length (points a b P0) - 1))).
-    exists (Rmin δ 1). split.
-    + apply Rmin_pos; try lra. apply Rdiv_pos_pos; try lra.
-      apply Rmult_lt_0_compat; try lra. unfold r. specialize (H12 a ltac:(solve_R)). admit.
-      pose proof (partition_length a b P0) as H14. apply INR_ge in H14. admit.
-    + intros P c H14 H15.
-      assert (H16 : Rabs (Riemann_sum a b f P c - L) <= Rabs (U(bf, P) - L(bf, P))).
-      { admit. }
-      assert (H17 : U(bf, P) - L(bf, P) < ε).
-      { admit. }
-      admit.
 Admitted.
 
 Lemma riemann_implies_darboux : forall (a b : ℝ) (f : ℝ -> ℝ) (L : ℝ),

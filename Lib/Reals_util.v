@@ -1213,3 +1213,204 @@ Proof.
   - lra.
   - exists k. lia.
 Qed.
+
+Lemma not_empty_In_list : forall {T : Type} (l : list T) (x : T),
+  List.In x l -> l <> [].
+Proof.
+  intros T l x H1 H2. destruct l as [| h t]; [ exfalso; auto | discriminate H2].
+Qed.
+
+Fixpoint find (l : list ℝ) (r : ℝ) : bool := 
+  match l with 
+  | [] => false
+  | h :: t => if (Req_dec_T h r) then true else find t r
+  end.
+
+Lemma find_iff : forall (l : list ℝ) (r : ℝ), find l r = true <-> List.In r l.
+Proof.
+  intros l r. split; intros H1.
+  - induction l as [| h t IH].
+    + simpl in H1. discriminate.
+    + simpl in H1. destruct (Req_dec_T h r) as [H2 | H2].
+      * left. auto.
+      * right. apply IH. auto.
+  - induction l as [| h t IH].
+    + simpl in H1. auto.
+    + simpl in H1. destruct H1 as [H2 | H3].
+      * subst. simpl. destruct (Req_dec_T r r) as [H4 | H4]; lra.
+      * specialize (IH H3). simpl. destruct (Req_dec_T h r) as [H4 | H4]; auto.
+Qed.
+
+Lemma find_iff_false : forall (l : list ℝ) (r : ℝ), find l r = false <-> ~List.In r l.
+Proof.
+  intros l r. pose proof find_iff l r as H1. split; intros H2.
+  - intros H3. apply H1 in H3. rewrite H2 in H3. discriminate.
+  - destruct (find l r); auto.  exfalso. apply H2. apply H1. reflexivity.
+Qed.
+
+Fixpoint get_all_points (l1 l2 : list ℝ) : list ℝ := 
+  match l2 with
+  | [] => []
+  | h :: t => if (find l1 h) then get_all_points l1 t else h :: get_all_points l1 t
+  end.
+
+Lemma get_all_points_spec : forall (l1 l2 : list ℝ) (r : ℝ), List.In r (get_all_points l1 l2) <-> (List.In r l2 /\ ~List.In r l1).
+Proof.
+  intros l1 l2 r. split; intros H1.
+  - induction l2 as [| h t IH].
+    -- simpl in H1; auto.
+    -- destruct (Req_dec r h) as [H2 | H2].
+       * subst. split. left. reflexivity. intros H2. simpl in H1. assert (H3 : find l1 h = true). { apply find_iff; auto. }
+         destruct (find l1 h). specialize (IH H1) as [IH1 IH2]. apply IH2. auto. inversion H3.
+       * simpl in H1. destruct (find l1 h). specialize (IH H1). split; try tauto. right. tauto. simpl in H1. destruct H1 as [H1 | H1]; try lra. 
+         specialize (IH H1) as [IH1 IH2]. split; try tauto. right. auto.
+  - induction l2 as [| h t IH].
+    -- simpl in H1; tauto.
+    -- destruct H1 as [H1 H2]. simpl. destruct (Req_dec r h) as [H3 | H3].
+       * subst. pose proof find_iff_false l1 h as H4. destruct (find l1 h). rewrite <- H4 in H2. discriminate. left. reflexivity.
+       * simpl in H1. destruct H1 as [H1 | H1]; try lra. destruct (find l1 h). tauto. right. tauto.
+Qed.
+
+
+Lemma get_all_points_NoDup : forall (l1 l2 : list ℝ), NoDup l2 -> NoDup (get_all_points l1 l2).
+Proof.
+  intros l1 l2 H1. induction l2 as [| h t IH].
+  - simpl. auto.
+  - simpl. destruct (find l1 h).
+    -- apply IH. apply NoDup_cons_iff in H1 as [H1 H1']. auto.
+    -- apply NoDup_cons_iff. split.
+       * intros H2. apply get_all_points_spec in H2 as [H2 _]. apply NoDup_cons_iff in H1 as [H1 H1']. apply H1; auto.
+       * apply IH. apply NoDup_cons_iff in H1 as [H1 H1']. auto.
+Qed.
+
+Lemma in_split' : forall l (x : R),
+  List.In x l -> exists l1 l2, l = l1 ++ [x] ++ l2.
+Proof.
+  intros l x H1. apply in_split; auto.
+Qed.
+
+Lemma list_in_first_app : forall a l1 l2,
+  (l1 ++ l2).[0] = a -> l1 <> [] -> List.In a l1.
+Proof.
+  intros a l1 l2 H1 H2. destruct l1 as [| h t].
+  - exfalso. apply H2. reflexivity.
+  - simpl in H1. left. auto.
+Qed.
+
+Lemma list_in_last_app : forall a l1 l2,
+  (l1 ++ l2).[(length l1 + length l2 - 1)] = a -> l2 <> [] -> List.In a l2.
+Proof.
+  intros a l1 l2 H1 H2. generalize dependent l1. induction l2 as [| h t IH].
+  - intros l1 H1. exfalso. apply H2. reflexivity.
+  - intros l1 H1. destruct t.
+    -- rewrite app_nth2 in H1; [ | simpl; lia].
+       replace (length l1 + length [h] - 1 - length l1)%nat with 0%nat in H1 by (simpl; lia).
+       simpl in H1. subst. left. reflexivity.
+    -- assert (H3 : r :: t <> []). { intros H3. inversion H3. }
+       specialize (IH H3 (l1 ++ [h])). right. apply IH.
+       replace (length (l1 ++ [h]) + length (r :: t) - 1)%nat with (length l1 + length (h :: r :: t) - 1)%nat.
+       2 : { rewrite length_app. simpl. lia.  }
+       rewrite <- app_assoc. rewrite <- H1. reflexivity.
+Qed.
+
+Lemma last_concat : forall l c,
+  l.[(length l - 1)] = c -> l <> [] -> exists l', l = l' ++ [c].
+Proof.
+  intros l c H1 H2. pose proof exists_last H2 as [l' [x H4]].
+  exists l'. rewrite H4 in H1. rewrite app_nth2 in H1.
+  2 : { rewrite length_app in *. simpl in *; lia. }
+  replace (length (l' ++ [x]) - 1 - length l')%nat with 0%nat in H1.
+  2 : { rewrite length_app in *. simpl in *; lia. } simpl in H1. subst. reflexivity.
+Qed.
+
+Lemma first_concat : forall l c,
+  l.[0] = c -> l <> [] -> exists l', l = [c] ++ l'.
+Proof.
+  intros l c H1 H2. destruct l as [| h t].
+  - exfalso. apply H2. reflexivity.
+  - simpl in H1. subst. exists t. reflexivity.
+Qed.
+
+Lemma exists_int_gt_inv_scale : forall a b ε,
+  a < b -> ε > 0 -> exists z : Z,
+    (z > 0)%Z /\ (b - a) / (IZR z) < ε.
+Proof.
+  intros a b ε H1 H2.
+  pose proof archimed (2 * (b - a) / ε) as [H3 H4].
+  assert (IZR (up (2 * (b - a) / ε)) - (2 * (b - a)) / ε = 1 \/ IZR (up (2 * (b - a) / ε)) - 2 * (b - a) / ε < 1) as [H5 | H5] by lra.
+  - exists (up (2 * (b - a) / ε) - 1)%Z. split.
+    -- assert (2 * (b - a) / ε > 0) as H6. { apply Rdiv_pos_pos; lra. } apply Z.lt_gt. apply lt_IZR. rewrite minus_IZR. lra.
+    -- rewrite minus_IZR. replace (IZR (up (2 * (b - a) / ε)) -1) with (2 * (b-a)/ε) by lra. apply Rmult_lt_reg_r with (r := ε); try lra.
+       field_simplify; nra.
+  - exists (up (2 * (b - a) / ε))%Z. split.
+    -- assert (2 * (b - a) / ε > 0) as H6. { apply Rdiv_pos_pos; lra. } apply Z.lt_gt. apply lt_IZR. lra.
+    -- assert (2 * (b - a) / ε > 0) as H6. { apply Rdiv_pos_pos; lra. } pose proof (Rinv_pos ε ltac:(lra)) as H7.
+       apply Rmult_lt_reg_r with (r := IZR (up (2 * (b - a) / ε))); try lra;
+       apply Rmult_lt_reg_l with (r := / ε); field_simplify; try lra.
+Qed.
+
+Lemma exists_nat_gt_inv_scale : forall a b ε,
+  a < b -> ε > 0 -> exists n : nat,
+    (n > 0)%nat /\ (b - a) / (INR n) < ε.
+Proof.
+  intros a b ε H1 H2.
+  pose proof exists_int_gt_inv_scale a b ε H1 H2 as [z [H3 H4]].
+  exists (Z.to_nat z). split; try lia. rewrite INR_IZR_INZ. rewrite Z2Nat.id. auto. lia.
+Qed.
+
+Lemma list_delta_lt_nth_0 : forall a b n,
+  nth 0 (map (fun x => ((b - a) / INR n) * x + a) (map INR (seq 0 (n+1)))) a = a.
+Proof.
+  intros a b n. destruct n; simpl; lra. 
+Qed.
+
+Lemma list_delta_lt_nth_n : forall a b n,
+  (n <> 0)%nat -> nth n (map (fun x => ((b - a) / INR n) * x + a) (map INR (seq 0 (n+1)))) a = b.
+Proof.
+  intros a b n H1. set (f := fun x => ((b - a) / INR n) * x + a).
+  replace a with (f 0). 2 : { unfold f. rewrite Rmult_0_r. lra. }
+  rewrite map_nth. replace 0 with (INR 0) by auto. rewrite map_nth. 
+  unfold f. rewrite seq_nth; try lia. solve_R. apply not_0_INR; auto.
+Qed.
+
+Lemma a_In_list_delta_lt : forall a b n,
+  List.In a (map (fun x => ((b - a) / INR n) * x + a) (map INR (seq 0 (n+1)))).
+Proof.
+  intros a b n. set (l := map (fun x => ((b - a) / INR n) * x + a) (map INR (seq 0 (n+1)))).
+  replace a with (nth 0 l a) in *. 2 : { apply list_delta_lt_nth_0; auto. }
+  apply nth_In. unfold l. repeat rewrite length_map. rewrite length_seq. lia.
+Qed.
+
+Lemma b_In_list_delta_lt : forall a b n,
+  (n <> 0)%nat -> List.In b (map (fun x => ((b - a) / INR n) * x + a) (map INR (seq 0 (n+1)))).
+Proof.
+  intros a b n H1. set (l := map (fun x => ((b - a) / INR n) * x + a) (map INR (seq 0 (n+1)))).
+  replace b with (nth n l a) in *. 2 : { apply list_delta_lt_nth_n; auto. }
+  apply nth_In. unfold l. repeat rewrite length_map. rewrite length_seq. lia.
+Qed.
+
+Lemma map_nth_in_bounds : forall (A B : Type) (l : list B) (i : nat) (d : B) (d' : A) (f : B -> A),
+  (i < length l)%nat ->
+  nth i (map f l) d' = f (nth i l d).
+Proof.
+  intros A B l i d d' f H1. replace (nth i (map f l) d') with (nth i (map f l) (f d)).
+  2 : { apply nth_indep. rewrite length_map; lia. } 
+  apply map_nth.
+Qed.
+
+Lemma list_delta_lt : forall a b i n ε,
+  let l := map (fun x => ((b - a) / INR n) * x + a) (map INR (seq 0 (n+1))) in
+    (i < length l - 1)%nat -> (n <> 0)%nat -> (b - a) / (INR n) < ε -> l.[(i+1)] - l.[i] < ε.
+Proof.
+  intros a b i n ε l H1 H2 H3. set (f := fun x => ((b - a) / INR n) * x + a).
+  assert (H4 : (length l = n + 1)%nat). {
+    unfold l. repeat rewrite length_map. rewrite length_seq. lia.
+  }
+  unfold l. repeat rewrite map_nth_in_bounds with (d := 0); try (rewrite length_map; rewrite length_seq; lia).
+  replace ((map INR (seq 0 (n + 1))).[(i + 1)]) with (INR (i + 1)).
+  2 : { rewrite map_nth_in_bounds with (d := 0%nat). 2 : { rewrite length_seq; lia. }
+    rewrite seq_nth; try lia. reflexivity. }
+  replace ((map INR (seq 0 (n + 1))).[i]) with (INR i).
+  2 : { rewrite map_nth_in_bounds with (d := 0%nat). 2 : { rewrite length_seq; lia. }
+    rewrite seq_nth; try lia. reflexivity. } solve_R.
+Qed.

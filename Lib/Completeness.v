@@ -1,5 +1,5 @@
-From Lib Require Import Imports Sets Notations Functions.
-Import SetNotations.
+From Lib Require Import Imports Sets Notations Interval.
+Import SetNotations IntervalNotations.
 
 Open Scope R_scope.
 
@@ -342,4 +342,79 @@ Proof.
   intros E1 E2 E3 M1 M2 M3 H1 H2 H3 H4.
   eapply lub_subset with (E2 := fun y => exists x1 x2, E1 x1 /\ E2 x2 /\ y = x1 + x2); eauto.
   apply is_lub_sum; auto.
+Qed.
+
+Definition bounded_below_on (f : ℝ -> ℝ) (A : Ensemble ℝ) :=
+  has_lower_bound (fun y => exists x, x ∈ A /\ y = f x).
+
+Definition unbounded_below_on (f : ℝ -> ℝ) (A : Ensemble ℝ) :=
+  ~ bounded_below_on f A.
+
+Definition bounded_above_on (f : ℝ -> ℝ) (A : Ensemble ℝ) :=
+  has_upper_bound (fun y => exists x, x ∈ A /\ y = f x).
+
+Definition unbounded_above_on (f : ℝ -> ℝ) (A : Ensemble ℝ) :=
+  ~ bounded_above_on f A.
+
+Definition bounded_below (f : ℝ -> ℝ) :=
+  bounded_below_on f ℝ.
+
+Definition unbounded_below (f : ℝ -> ℝ) :=
+  unbounded_below_on f ℝ.
+
+Definition bounded_above (f : ℝ -> ℝ) :=
+  bounded_above_on f ℝ.
+
+Definition unbounded_above (f : ℝ -> ℝ) :=
+  unbounded_above_on f ℝ.
+
+Definition bounded_on (f : ℝ -> ℝ) (A : Ensemble ℝ) :=
+  has_lower_bound (fun y => exists x, x ∈ A /\ y = f x) /\
+  has_upper_bound (fun y => exists x, x ∈ A /\ y = f x).
+
+Lemma unbounded_above_exists : forall f,
+  unbounded_above f -> forall M, exists x, f x > M.
+Proof.
+  intros f H1 M. 
+  apply NNPP; intro H2.
+  apply H1.
+  exists M.
+  intros x [x0 [_ ->]].
+  apply Rnot_lt_le. intros H3. apply H2.
+  exists x0. auto.
+Qed.
+
+Record bounded_function_R (a b : ℝ) : Type := mkbounded_function_R
+{
+  bounded_f : ℝ -> ℝ;
+  bounded_function_R_P1 : a <= b;
+  bounded_function_R_P2 : bounded_on bounded_f [a, b]
+}.
+
+Lemma bounded_on_sub_interval : forall (f : ℝ -> ℝ) (a a' b b' : ℝ),
+  bounded_on f [a, b] -> (a <= a' <= b' <= b) -> bounded_on f [a', b'].
+Proof.
+  intros f a b a' b' [[lb H1] [ub H2]] H3. split.
+  - exists lb. intros y [x [H4 H5]]. specialize (H1 y). apply H1. exists x. unfold Ensembles.In in *; split; lra.
+  - exists ub. intros y [x [H4 H5]]. specialize (H2 y). apply H2. exists x. unfold Ensembles.In in *; split; lra.
+Qed.
+
+Lemma interval_has_inf : forall (a b : ℝ) (f : ℝ -> ℝ),
+  a <= b ->
+  bounded_on f [a, b] ->
+  { inf | is_glb (fun y => exists x, x ∈ [a, b] /\ y = f x) inf }.
+Proof.
+  intros a b f H1 [H2 H3]. set (A := fun y => exists x, x ∈ [a, b] /\ y = f x).
+  assert (H4 : A ≠ ∅). { apply not_Empty_In. exists (f a). exists a; auto. split; auto. unfold Ensembles.In. lra. }
+  apply completeness_lower_bound; auto. 
+Qed. 
+
+Lemma interval_has_sup : forall (a b : ℝ) (f : ℝ -> ℝ),
+  a <= b ->
+  bounded_on f [a, b] ->
+  { sup | is_lub (fun y => exists x, x ∈ [a, b] /\ y = f x) sup }.
+Proof.
+  intros a b f H1 [H2 H3]. set (A := fun y => exists x, x ∈ [a, b] /\ y = f x).
+  assert (H4 : A ≠ ∅). { apply not_Empty_In. exists (f a). exists a; auto. split; auto. unfold Ensembles.In. lra. }
+  apply completeness_upper_bound; auto.
 Qed.

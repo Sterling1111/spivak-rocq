@@ -137,7 +137,7 @@ Open Scope string_scope.
 
 Definition compute_extgcd_text (pair : Z * Z) : string :=
   let (a, b) := pair in
-  let '(x, y, gcd) := Znumtheory.extgcd a b in
+  let '(x, y, gcd) := Z.extgcd a b in
   let equation :=
     Z_to_string gcd ++ " = " ++
     Z_to_string a ++ " * " ++ Z_to_string x ++ " + " ++

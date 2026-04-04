@@ -416,3 +416,17 @@ Proof.
       + apply Sorted_inv in H1 as [H6 H7]. destruct t; try contradiction.
         apply HdRel_cons. apply HdRel_inv in H7. auto.
 Qed.
+
+Lemma Sorted_Rlt_glue : forall (l1 l2 : list ℝ) (c : ℝ),
+  Sorted Rlt (l1 ++ [c]) ->
+  Sorted Rlt ([c] ++ l2) ->
+  Sorted Rlt (l1 ++ [c] ++ l2).
+Proof.
+  induction l1 as [| h t IH]; intros l2 c H1 H2.
+  - simpl in *; auto.
+  - simpl in *. inversion H1. subst. apply Sorted_cons.
+    -- apply IH; auto.
+    -- destruct t.
+       + simpl in *. inversion H4. subst. inversion H2. subst. constructor; auto.
+       + simpl in *. inversion H4. subst. constructor; auto.
+Qed.

@@ -48,7 +48,6 @@ From Stdlib Require Export
   
 
 Export ListNotations.
-Import EqNotations.
 
 Open Scope R_scope.
 Open Scope nat_scope.
