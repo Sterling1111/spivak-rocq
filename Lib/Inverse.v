@@ -420,12 +420,8 @@ Proof.
       + assert (H18 : f b <= f a).
         { apply decreasing_on_imp_non_increasing_on in H17. apply Rge_le, H17; solve_R. }
         rewrite Rmin_right, Rmax_left in H16; auto.
-        assert (H19 : w = f b \/ w = f a \/ f b <= w <= f a) by solve_R.
-        destruct H19 as [H19 | [H19 | H19]].
-        * rewrite H19. rewrite H14. solve_R. apply Full_intro.
-        * rewrite H19. rewrite H14. solve_R. apply Full_intro.
-        * pose proof intermediate_value_theorem_decreasing f a b w H4 H5 H19 as [z [H20 H21]].
-          rewrite <- H21, H14; auto. apply Full_intro.
+        pose proof intermediate_value_theorem_decreasing f a b w H4 H5 ltac:(solve_R) as [z [H20 H21]].
+        rewrite <- H21, H14; auto. apply Full_intro.
     - intros z H16. apply H14; auto. apply Full_intro.
     - intros w H16. apply H15; auto. apply Full_intro.
   }
