@@ -3696,3 +3696,90 @@ Proof.
   rewrite H.
   apply cos_arctan_nonneg.
 Qed.
+
+Lemma sin_eq_0_on_0_pi : ∀ x, 0 <= x <= π -> sin x = 0 <-> x = 0 \/ x = π.
+Proof.
+  intros x H1; split.
+  - intros H2.
+    rewrite sin_consistency_on_0_π in H2; auto.
+    unfold sin_0_π in H2.
+    assert (H3 : (√(1 - cos_0_π x ^ 2))^2 = 0^2) by (f_equal; lra).
+    assert (H4 : 1 - cos_0_π x ^ 2 >= 0) by (pose proof (cos_0_π_in_range x H1); solve_R).
+    rewrite pow2_sqrt in H3; auto; try lra.
+    assert (H5 : cos_0_π x = 1 \/ cos_0_π x = -1) by nra.
+    pose proof cos_0_π_spec x H1 as H6.
+    destruct H5 as [H5 | H5].
+    + left. rewrite H5 in H6. rewrite A_at_1 in H6. lra.
+    + right. rewrite H5 in H6. rewrite A_at_neg_1 in H6. lra.
+  - intros [H2 | H2]; subst; [apply sin_0 | apply sin_π].
+Qed.
+
+Lemma sin_eq_0 : ∀ x, sin x = 0 <-> ∃ k : ℤ, x = IZR k * π.
+Proof.
+  intros x; split.
+  - intros H1.
+    unfold sin in H1.
+    destruct (red_0_2π_spec x) as [H2 [k H3]].
+    set (y := proj1_sig (red_0_2π x)) in *.
+    unfold sin_0_2π in H1.
+    destruct (Rle_dec y π) as [H4 | H4].
+    + assert (H5 : sin y = 0). { rewrite sin_consistency_on_0_π; auto. lra. }
+      apply sin_eq_0_on_0_pi in H5; try lra.
+      destruct H5 as [H5 | H5]; subst y.
+      * exists (2 * k)%Z. rewrite mult_IZR. simpl. lra.
+      * exists (2 * k + 1)%Z. rewrite plus_IZR, mult_IZR. simpl. lra.
+    + assert (H5 : 0 <= 2 * π - y <= π) by lra.
+      assert (H6 : sin (2 * π - y) = 0).
+      { rewrite sin_consistency_on_0_π; auto. lra. }
+      apply sin_eq_0_on_0_pi in H6; auto.
+      destruct H6 as [H6 | H6].
+      * pose proof π_pos as H7. lra.
+      * exists (2 * k + 1)%Z. rewrite plus_IZR, mult_IZR. simpl. lra.
+  - intros [k H1].
+    unfold sin.
+    destruct (red_0_2π_spec x) as [H2 [m H3]].
+    set (y := proj1_sig (red_0_2π x)) in *.
+    assert (H4 : y = IZR k * π - IZR m * 2 * π) by lra.
+    assert (H5 : IZR k * π - IZR m * 2 * π = IZR (k - 2 * m) * π).
+    { rewrite minus_IZR, mult_IZR. simpl. lra. }
+    rewrite H5 in H4.
+    assert (H6 : (k - 2 * m)%Z = 0%Z \/ (k - 2 * m)%Z = 1%Z).
+    {
+      assert ((k - 2 * m)%Z <= -1 \/ (k - 2 * m)%Z = 0 \/ (k - 2 * m)%Z = 1 \/ (k - 2 * m)%Z >= 2)%Z as [H7 | [H7 | [H7 | H7]]] by lia.
+      - apply IZR_le in H7. pose proof π_pos as H8. nra.
+      - auto.
+      - auto.
+      - apply IZR_ge in H7. pose proof π_pos as H8. nra.
+    }
+    destruct H6 as [H6 | H6]; rewrite H6 in H4; simpl in H4.
+    + replace y with 0 in * by lra.
+      unfold sin_0_2π. destruct (Rle_dec 0 π) as [H7 | H7]; try lra.
+      unfold sin_0_π. rewrite <- cos_on_0_π; try lra. rewrite cos_0.
+      replace (1 - 1 ^ 2) with 0 by lra. apply sqrt_0.
+    + replace y with π in * by lra.
+      unfold sin_0_2π. destruct (Rle_dec π π) as [H7 | H7]; try lra.
+      unfold sin_0_π. rewrite <- cos_on_0_π; try lra. rewrite cos_π.
+      replace (1 - (-1) ^ 2) with 0 by lra. apply sqrt_0.
+Qed.
+
+Lemma lemma_sin_neq_0_neighborhood : ∀ b x, 
+  b <> 0 -> 0 < |x| < π / (2 * |b|) -> sin (b * x) <> 0.
+Proof.
+  intros b x H1 [H2 H3] H4.
+  apply sin_eq_0 in H4 as [k H5].
+  destruct (Z.eq_dec k 0) as [H6 | H6].
+  - subst k. simpl in H5. rewrite Rmult_0_l in H5.
+    apply Rmult_integral in H5 as [H5 | H5]; solve_R.
+  - assert (H7 : |IZR k| >= 1).
+    {
+      assert ((k <= -1)%Z \/ (1 <= k)%Z) as [H7 | H7] by lia.
+      - apply IZR_le in H7. solve_abs.
+      - apply IZR_le in H7. solve_abs.
+    }
+    assert (H8 : |b * x| < π / 2).
+    {
+      rewrite Rabs_mult. apply Rlt_le_trans with (r2 := |b| * (π / (2 * |b|))). solve_R.
+      apply Req_le. solve_R.
+    }
+    rewrite H5, Rabs_mult in H8. pose proof π_pos as H9. solve_abs.
+Qed.

@@ -1,15 +1,38 @@
-From Calculus.Chapter5 Require Import Prelude.
+From Calculus.Chapter5 Require Import Prelude Problem_5_14.
 
 Section Problem_5_15.
 
 Variable α : R.
-Hypothesis H1 : ⟦ lim 0 ⟧ (fun x => sin x / x) = α.
+Hypothesis H1 : ⟦ lim 0 ⟧ (λ x, sin x / x) = α.
+Hypothesis H2 : α ≠ 0.
 
 Lemma lemma_5_15_i : ⟦ lim 0 ⟧ (fun x => sin (3 * x) / x) = 3 * α.
-Proof. Admitted.
+Proof.
+  apply lemma_5_14_a; solve_R.
+Qed.
 
-Lemma lemma_5_15_ii (a b : R) (H2 : b <> 0) : ⟦ lim 0 ⟧ (fun x => sin (a * x) / sin (b * x)) = a / b.
-Proof. Admitted.
+Lemma lemma_5_15_ii : forall a b,
+  b <> 0 -> ⟦ lim 0 ⟧ (fun x => sin (a * x) / sin (b * x)) = a / b.
+Proof.
+  intros a b H3. destruct (Req_dec a 0) as [H4 | H4].
+  - rewrite H4.
+    replace (0 / b) with 0 by solve_R.
+    apply limit_eq with (f1 := fun x => 0).
+    2 : { apply limit_const. }
+    exists 1. split; [solve_R |].
+    intros x H5. rewrite Rmult_0_l, sin_0, Rdiv_0_l. reflexivity.
+  - apply limit_eq with (f1 := fun x => (sin (a * x) / x) / (sin (b * x) / x)).
+    {
+      exists (Rmin 1 (π / (2 * |b|))). split.
+      - pose proof π_bounds; pose proof Rdiv_pos_pos π (2 * |b|); solve_R.
+      - intros x H5. field; split; [| solve_R]. apply lemma_sin_neq_0_neighborhood; solve_R.
+    }
+    replace (a / b) with ((a * α) / (b * α)) by solve_R.
+    apply limit_div.
+    + apply lemma_5_14_a; auto.
+    + apply lemma_5_14_a; auto.
+    + solve_R.
+Qed.
 
 Lemma lemma_5_15_iii : ⟦ lim 0 ⟧ (fun x => (sin x)^2 / x) = 0.
 Proof. Admitted.
