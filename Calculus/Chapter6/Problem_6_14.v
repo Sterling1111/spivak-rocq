@@ -17,11 +17,33 @@ Proof.
     specialize (H10 x). assert (0 < |x - a| < δ2) by solve_R. apply H10 in H0. solve_R.
 Qed.
 
-Lemma lemma_6_14_b : forall f g h a b c,
-  a < b -> b < c ->
+Lemma lemma_6_14_b : ∀ f g h a b c,
+  a < b < c ->
   continuous_on g [a, b] -> continuous_on h [b, c] ->
   g b = h b ->
-  (forall x, x ∈ [a, b] -> f x = g x) ->
-  (forall x, x ∈ [b, c] -> f x = h x) ->
+  (∀ x, x ∈ [a, b] -> f x = g x) ->
+  (∀ x, x ∈ [b, c] -> f x = h x) ->
   continuous_on f [a, c].
-Proof. Admitted.
+Proof.
+  intros f g h a b c H1 H2 H3 H4 H5 H6 x H7.
+  assert (x ∈ [a, b) \/ x ∈ (b, c] \/ x = b) as [H9 | [H9 | H9]] by solve_R.
+  - specialize (H2 x ltac:(solve_R)).
+    replace (f x) with (g x) by (rewrite H5; solve_R).
+    apply limit_on_local_eq with (D2 := [a, b]) (f2 := g); auto.
+    exists (b - x); split; [ solve_R |].
+    intros y H10 H11; split; [solve_R | apply H5; solve_R ].
+  - specialize (H3 x ltac:(solve_R)).
+    replace (f x) with (h x) by (rewrite H6; solve_R).
+    apply limit_on_local_eq with (D2 := [b, c]) (f2 := h); auto.
+    exists (x - b); split; [ solve_R |].
+    intros y H10 H11; split; [solve_R | apply H6; solve_R ].
+  - subst. apply limit_imp_limit_on, limit_iff. split.
+    + replace (f b) with (g b) by (rewrite H5; solve_R).
+      apply limit_left_eq with (f1 := g).
+      * exists (b - a); split; [solve_R | intros x H8; rewrite H5; solve_R ].
+      * apply continuous_on_closed_interval_iff in H2 as [_ [_ H10]]; solve_R.
+    + replace (f b) with (h b) by (rewrite H6; solve_R).
+      apply limit_right_eq with (f1 := h).
+      * exists (c - b); split; [solve_R | intros x H8; rewrite H6; solve_R ].
+      * apply continuous_on_closed_interval_iff in H3 as [_ [H10 _]]; solve_R.
+Qed.

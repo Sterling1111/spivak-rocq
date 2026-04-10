@@ -1,9 +1,10 @@
 From Calculus.Chapter20 Require Import Prelude.
 
-(* Problem 1: Find Taylor polynomials. *)
-
 Lemma lemma_20_1_i : forall x,
   P(3, 0, fun x => exp (exp x)) x = exp 1 * (1 + x + x^2 + 5 / 6 * x^3).
+Proof.
+  intros x.
+  
 Admitted.
 
 Lemma lemma_20_1_ii : forall x,

@@ -256,6 +256,19 @@ Proof.
   intros x H6 H7. rewrite <- H1; [apply H5 |]; solve_R.
 Qed.
 
+Lemma limit_on_local_eq : forall f1 f2 D1 D2 a L,
+  (exists δ, δ > 0 /\ forall x, x ∈ D1 -> 0 < |x - a| < δ -> x ∈ D2 /\ f1 x = f2 x) ->
+  ⟦ lim a ⟧ f2 D2 = L ->
+  ⟦ lim a ⟧ f1 D1 = L.
+Proof.
+  intros f1 f2 D1 D2 a L [δ1 [H1 H2]] H3 ε H4.
+  specialize (H3 ε H4) as [δ2 [H5 H6]].
+  exists (Rmin δ1 δ2). split; [solve_R |].
+  intros x H7 H8.
+  specialize (H2 x H7 ltac:(solve_R)) as [H9 H10].
+  rewrite H10. apply H6; solve_R.
+Qed.
+
 Lemma limit_ext : forall f g a L, 
   (forall x, f x = g x) -> ⟦ lim a ⟧ f = L -> ⟦ lim a ⟧ g = L.
 Proof.
