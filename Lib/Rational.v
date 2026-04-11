@@ -191,6 +191,39 @@ Proof.
     apply sqrt_2_irrational. exact H10.
 Qed.
 
+Lemma exists_rational_between : forall a b,
+  a < b -> exists c, (a < c < b)%R /\ rational c.
+Proof.
+  intros a b H1.
+  assert (H2 : 0 < b - a) by lra.
+  assert (H3 : 0 < 1 / (b - a)) by (apply Rdiv_pos_pos; lra).
+  pose proof (archimed (1 / (b - a))) as [H4 H5].
+  set (z2 := up (1 / (b - a))).
+  assert (H6 : 0 < IZR z2). { unfold z2. lra. }
+  
+  pose proof (archimed (a * IZR z2)) as [H7 H8].
+  set (z1 := up (a * IZR z2)).
+  set (q := IZR z1 / IZR z2).
+  
+  exists q.
+  split.
+  - assert (H9 : a < q).
+    { unfold q. apply Rmult_lt_reg_r with (r := IZR z2); try lra.
+      replace (IZR z1 / IZR z2 * IZR z2) with (IZR z1) by (field; lra).
+      unfold z1 in *. lra. }
+    assert (H10 : q < b).
+    { unfold q. apply Rmult_lt_reg_r with (r := IZR z2); try lra.
+      replace (IZR z1 / IZR z2 * IZR z2) with (IZR z1) by (field; lra).
+      assert (H11 : 1 < (b - a) * IZR z2).
+      { apply Rmult_lt_reg_l with (r := 1 / (b - a)); try lra.
+        replace (1 / (b - a) * 1) with (1 / (b - a)) by lra.
+        replace (1 / (b - a) * ((b - a) * IZR z2)) with (IZR z2) by (field; lra).
+        unfold z2 in *. lra. }
+      unfold z1, z2 in *. lra. }
+    lra.
+  - unfold rational, q. exists z1, z2. reflexivity.
+Qed.
+
 Lemma irrational_square_imp_irrational : forall r,
   irrational (r^2) -> irrational r.
 Proof.
