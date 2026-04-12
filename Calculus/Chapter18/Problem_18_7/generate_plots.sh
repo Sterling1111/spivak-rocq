@@ -6,15 +6,20 @@ FOLDER="Calculus/Chapter18/Problem_18_7"
 COQ_FILE="Calculus/Chapter18/Problem_18_7.v"
 VO_FILE="Calculus/Chapter18/Problem_18_7.vo"
 
-echo "Cleaning up $FOLDER..."
+echo "Generaatng PNG plots forproblem 18_7..."
 mkdir -p "$FOLDER"
 # Avoid deleting the script itself
 find "$FOLDER" -type f ! -name 'generate_plots.sh' -delete
 
 # Force re-compilation to generate .gp plots
-echo "Compiling $COQ_FILE to generate .gp plots..."
 rm -f "$VO_FILE"
-coqc -w "-deprecated-dirpath-Coq,-deprecated-since-9.0" -R Lib Lib -R Calculus Calculus -R ATTAM ATTAM -I src "$COQ_FILE"
+coq_log="$(mktemp)"
+if ! coqc -w "-deprecated-dirpath-Coq,-deprecated-since-9.0" -R Lib Lib -R Calculus Calculus -R ATTAM ATTAM -I src "$COQ_FILE" >"$coq_log" 2>&1; then
+    cat "$coq_log" >&2
+    rm -f "$coq_log"
+    exit 1
+fi
+rm -f "$coq_log"
 
 # Generate PNG plots from any existing .gp files
 shopt -s nullglob
@@ -43,11 +48,15 @@ for f in "$FOLDER"/*.gp; do
     # To make line thicknesses match perfectly in the legend and plot, we swap the generated 'filledcurves' for 'lines linewidth 2'
     sed "s|notitle with filledcurves|title '${func_label}' with lines linewidth 2|" "$f" | grep -v "pause mouse" >> "$temp_gp"
     
-    gnuplot "$temp_gp"
+    gp_log="$(mktemp)"
+    if ! gnuplot "$temp_gp" >"$gp_log" 2>&1; then
+        cat "$gp_log" >&2
+        rm -f "$gp_log" "$temp_gp"
+        exit 1
+    fi
+    rm -f "$gp_log"
     rm -f "$temp_gp"
-    echo "Generated ${base}.png"
 done
 
 # Cleanup .gp files
 rm -f "$FOLDER"/*.gp
-echo "Done! Removed .gp files."

@@ -3567,6 +3567,27 @@ Proof.
     field; auto.
 Qed.
 
+Lemma continuous_at_sec : forall x, cos x <> 0 -> continuous_at sec x.
+Proof.
+  intros x H1. apply differentiable_at_imp_continuous_at.
+  apply derivative_at_imp_differentiable_at with (f' := fun y => sec y * tan y).
+  apply derivative_at_sec. exact H1.
+Qed.
+
+Lemma continuous_at_csc : forall x, sin x <> 0 -> continuous_at csc x.
+Proof.
+  intros x H1. apply differentiable_at_imp_continuous_at.
+  apply derivative_at_imp_differentiable_at with (f' := fun y => - csc y * cot y).
+  apply derivative_at_csc. exact H1.
+Qed.
+
+Lemma continuous_at_cot : forall x, sin x <> 0 -> continuous_at cot x.
+Proof.
+  intros x H1. apply differentiable_at_imp_continuous_at.
+  apply derivative_at_imp_differentiable_at with (f' := fun y => - (csc y)^2).
+  apply derivative_at_cot. exact H1.
+Qed.
+
 Lemma limit_sin_x_over_x : ⟦ lim 0 ⟧ (fun x => sin x / x) = 1.
 Proof.
   pose proof (derivative_at_sin 0) as H1.

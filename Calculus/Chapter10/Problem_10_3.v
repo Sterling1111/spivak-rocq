@@ -1,13 +1,26 @@
 From Calculus.Chapter10 Require Import Prelude.
 
-Lemma lemma_10_3_i : ⟦ der ⟧ tan = (λ x, sec x ^ 2).
-Proof. Admitted.
+Lemma lemma_10_3_i : forall x,
+  cos x <> 0 -> ⟦ der x ⟧ tan = sec ^ 2.
+Proof.
+  intros x H1. unfold sec.
+  auto_diff.
+Qed.
 
-Lemma lemma_10_3_ii : ⟦ der ⟧ cot = (λ x, - csc x ^ 2).
-Proof. Admitted.
+Lemma lemma_10_3_ii : forall x,
+  sin x <> 0 -> ⟦ der x ⟧ cot = (λ y, - (csc y)^2).
+Proof.
+  auto_diff.
+Qed.
 
-Lemma lemma_10_3_iii : ⟦ der ⟧ sec = (λ x, sec x * tan x).
-Proof. Admitted.
+Lemma lemma_10_3_iii : forall x,
+  cos x <> 0 -> ⟦ der x ⟧ sec = (λ y, sec y * tan y).
+Proof.
+  auto_diff.
+Qed.
 
-Lemma lemma_10_3_iv : ⟦ der ⟧ csc = (λ x, - (csc x * cot x)).
-Proof. Admitted.
+Lemma lemma_10_3_iv : forall x,
+  sin x <> 0 -> ⟦ der x ⟧ csc = (λ y, - csc y * cot y).
+Proof.
+  auto_diff.
+Qed.
