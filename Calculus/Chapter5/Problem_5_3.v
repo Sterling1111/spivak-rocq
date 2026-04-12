@@ -85,7 +85,12 @@ Qed.
 
 Lemma lemma_5_3_vii : ⟦ lim 0 ⟧ (λ x, √(|x|)) = 0.
 Proof.
-Admitted.
+  intros ε H1. exists (ε * ε). split; [solve_R |].
+  intros x [H2 H3].
+  rewrite Rminus_0_r in *.
+  replace (|x|) with (√(|x|) * √(|x|)) in H3 by (apply sqrt_def; solve_R).
+  solve_R.
+Qed.
 
 Lemma lemma_5_3_viii : ⟦ lim 1 ⟧ (λ x, √x) = 1.
 Proof.

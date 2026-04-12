@@ -3783,3 +3783,32 @@ Proof.
     }
     rewrite H5, Rabs_mult in H8. pose proof π_pos as H9. solve_abs.
 Qed.
+
+Lemma sin_gt_0 : forall x, 0 < x < π -> sin x > 0.
+Proof.
+  intros x H1.
+  rewrite sin_consistency_on_0_π; try lra.
+  unfold sin_0_π.
+  apply sqrt_lt_R0.
+  assert (H2 : cos_0_π x ∈ [-1, 1]) by (apply cos_0_π_in_range; lra).
+  assert (H3 : cos_0_π x <> 1).
+  { intro H4. pose proof cos_0_π_spec x ltac:(lra) as H5. rewrite H4 in H5. rewrite A_at_1 in H5. lra. }
+  assert (H4 : cos_0_π x <> -1).
+  { intro H5. pose proof cos_0_π_spec x ltac:(lra) as H6. rewrite H5 in H6. rewrite A_at_neg_1 in H6. pose proof π_pos. lra. }
+  destruct H2 as [H5 H6]. nra.
+Qed.
+
+Lemma arcsin_pos : forall x, 0 < x < 1 -> 0 < arcsin x.
+Proof.
+  intros x H1.
+  apply Rnot_ge_lt; intro H2.
+  pose proof arcsin_spec as [_ [H3 [_ H4]]].
+  assert (H5 : x ∈ [-1, 1]) by solve_R.
+  assert (H6 : arcsin x ∈ [-(π/2), π/2]) by (apply H3; solve_R).
+  assert (H7 : sin (arcsin x) = x) by (apply H4; solve_R).
+  assert (H8 : 0 ∈ [-(π/2), π/2]) by (pose proof π_pos; solve_R).
+  assert (arcsin x = 0 \/ arcsin x < 0) as [H9 | H9] by lra.
+  - rewrite H9, sin_0 in H7. lra.
+  - pose proof sin_increasing_on (arcsin x) 0 H6 H8 H9 as H10.
+    rewrite H7, sin_0 in H10. lra.
+Qed.

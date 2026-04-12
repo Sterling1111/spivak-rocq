@@ -58,10 +58,10 @@ Lemma lemma_19_1_iv : forall a b c, a > 0 -> b > 0 -> a <> b ->
   (λ x, ((a / b) ^^ x) / log (a / b) + c).
 Proof.
   intros a b c H1 H2 H3. unfold antiderivative. auto_diff.
-  - apply derivative_Rpower_base; apply Rdiv_lt_0_compat; lra.
+  - apply Rdiv_pos_pos; lra.
   - apply log_div_neq_0; auto.
   - pose proof Rpower_gt_0 b x H2 as H4. pose proof log_div_neq_0 a b H1 H2 H3 as H5.
-    rewrite Rpower_div; solve_R.
+    rewrite Rpower_div; solve_R. repeat split; solve_R. rewrite ln_eq_log; auto.
 Qed.
 
 Lemma lemma_19_1_v : forall c,

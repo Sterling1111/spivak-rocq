@@ -424,7 +424,7 @@ Definition Rpower (a x : R) : R :=
   | right _ => 0
   end.
 
-Notation "a ^^ x" := (Rpower a x) (at level 30, format "a ^^ x") : R_scope.
+Notation "a ^^ x" := (Rpower a x) (at level 30, right associativity, format "a ^^ x") : R_scope.
 
 Lemma Rpower_0_0 : 0 ^^ 0 = 0.
 Proof.
@@ -1355,3 +1355,96 @@ Qed.
 Definition sinh (x : R) : R := (exp x - exp (- x)) / 2.
 Definition cosh (x : R) : R := (exp x + exp (- x)) / 2.
 Definition tanh (x : R) : R := sinh x / cosh x.
+
+Lemma continuous_at_right_Rpower_comp : forall f g a,
+  ⟦ lim a⁺ ⟧ f = f a ->
+  ⟦ lim a⁺ ⟧ g = g a ->
+  f a > 0 ->
+  ⟦ lim a⁺ ⟧ (fun x => f x ^^ g x) = f a ^^ g a.
+Proof.
+  intros f g a H1 H2 H3.
+  pose proof (continuous_at_right_locally_pos f a H1 H3) as [δ [H4 H5]].
+  apply limit_right_eq with (f1 := fun x => exp (g x * log (f x))).
+  - exists δ. split; [exact H4 |].
+    intros x H6.
+    unfold Rpower. destruct (Rlt_dec 0 (f x)) as [H7 | H7].
+    + reflexivity.
+    + exfalso. apply H7. apply H5. lra.
+  - replace (f a ^^ g a) with (exp (g a * log (f a))).
+    + apply limit_right_continuous_comp.
+      * apply limit_right_mult; auto.
+        apply limit_right_continuous_comp with (f := log); auto.
+        apply continuous_at_log. exact H3.
+      * apply continuous_at_exp.
+    + unfold Rpower. destruct (Rlt_dec 0 (f a)); lra.
+Qed.
+
+Lemma continuous_at_left_Rpower_comp : forall f g a,
+  ⟦ lim a⁻ ⟧ f = f a ->
+  ⟦ lim a⁻ ⟧ g = g a ->
+  f a > 0 ->
+  ⟦ lim a⁻ ⟧ (fun x => f x ^^ g x) = f a ^^ g a.
+Proof.
+  intros f g a H1 H2 H3.
+  pose proof (continuous_at_left_locally_pos f a H1 H3) as [δ [H4 H5]].
+  apply limit_left_eq with (f1 := fun x => exp (g x * log (f x))).
+  - exists δ. split; [exact H4 |].
+    intros x H6.
+    unfold Rpower. destruct (Rlt_dec 0 (f x)) as [H7 | H7].
+    + reflexivity.
+    + exfalso. apply H7. apply H5. lra.
+  - replace (f a ^^ g a) with (exp (g a * log (f a))).
+    + apply limit_left_continuous_comp.
+      * apply limit_left_mult; auto.
+        apply limit_left_continuous_comp with (f := log); auto.
+        apply continuous_at_log. exact H3.
+      * apply continuous_at_exp.
+    + unfold Rpower. destruct (Rlt_dec 0 (f a)); lra.
+Qed.
+
+Lemma continuous_at_Rpower_comp : forall f g a,
+  continuous_at f a ->
+  continuous_at g a ->
+  f a > 0 ->
+  continuous_at (fun x => f x ^^ g x) a.
+Proof.
+  intros f g a H1 H2 H3.
+  pose proof (continuous_at_locally_pos f a H1 H3) as [δ [H4 H5]].
+  unfold continuous_at in *.
+  apply limit_eq with (f1 := fun x => exp (g x * log (f x))).
+  - exists δ. split; [exact H4 |].
+    intros x H6.
+    unfold Rpower. destruct (Rlt_dec 0 (f x)) as [H7 | H7].
+    + reflexivity.
+    + exfalso. apply H7. apply H5. lra.
+  - replace (f a ^^ g a) with (exp (g a * log (f a))).
+    + apply limit_continuous_comp.
+      * apply limit_mult; auto.
+        apply limit_continuous_comp with (f := log); auto.
+        apply continuous_at_log. exact H3.
+      * apply continuous_at_exp.
+    + unfold Rpower. destruct (Rlt_dec 0 (f a)); lra.
+Qed.
+
+Lemma limit_Rpower_comp : forall f g a,
+  ⟦ lim a ⟧ f = f a ->
+  ⟦ lim a ⟧ g = g a ->
+  f a > 0 ->
+  ⟦ lim a ⟧ (fun x => f x ^^ g x) = f a ^^ g a.
+Proof.
+  intros f g a H1 H2 H3.
+  pose proof (limit_pos_neighborhood f a (f a) H1 H3) as [δ [H4 H5]].
+  apply limit_eq with (f1 := fun x => exp (g x * log (f x))).
+  - exists δ. split; [exact H4 |].
+    intros x H6.
+    unfold Rpower. destruct (Rlt_dec 0 (f x)) as [H7 | H7].
+    + reflexivity.
+    + exfalso. apply H7. apply H5. exact H6.
+  - replace (f a ^^ g a) with (exp (g a * log (f a))).
+    + apply limit_continuous_comp.
+      * apply limit_mult; auto.
+        apply limit_continuous_comp with (f := log); auto.
+        apply continuous_at_log. exact H3.
+      * apply continuous_at_exp.
+    + unfold Rpower. destruct (Rlt_dec 0 (f a)); lra.
+Qed.

@@ -1,19 +1,26 @@
 From Calculus.Chapter5 Require Import Prelude.
 
-Lemma lemma_5_17_a : forall l, 
-  ~ ⟦ lim 0 ⟧ (λ x, 1 / x) = l.
+Lemma lemma_5_17_a : ∀ l,
+  ¬ ⟦ lim 0 ⟧ (λ x, 1 / x) = l.
 Proof.
-  intros l H1. specialize (H1 1) as [δ [H2 H3]]; try lra.
-  specialize (H3 (Rmin (δ/2) (1/2)) ltac:(solve_R)).
-  assert (H4 : forall a b c, a > 0 -> 0 < b < 1 -> 0 < c < b -> a / b < a / c).
+  intros l H1.
+  specialize (H1 1 ltac:(solve_R)) as [δ [H2 H3]].
+  set (x := Rmin (δ / 2) (1 / (|l| + 2))).
+  assert (x > 0) as H4.
   {
-    intros a b c H4 H5 H6. apply Rmult_lt_reg_l with (r := b); 
-    apply Rmult_lt_reg_l with (r := c); try nra. 
-    field_simplify; try lra. apply Rmult_lt_compat_r; try lra. 
-  }
-  assert ((δ / 2) < (1/2) \/ (δ / 2) >= (1/2)) as [H5 | H5] by lra.
-  - specialize (H4 1 (1/2) (δ/2) ltac:(lra) ltac:(solve_R) (ltac:(solve_R))) as H6.
-    replace (1 / (1 / 2)) with 2 in * by lra.
+    unfold x.
+    pose proof Rdiv_pos_pos δ 2 H2 ltac:(lra) as H4.
+    pose proof Rdiv_pos_pos 1 ((|l| + 2)) ltac:(lra) ltac:(solve_R) as H5.
     solve_R.
-  admit.
-Admitted.
+  }
+  assert (H5 : 0 < |(x - 0)| < δ) by (unfold x in *; solve_R).
+  specialize (H3 x H5) as H6.
+  assert (H7 : 1 / x ≥ |l| + 2).
+  {
+    replace (1 / x) with (/ x) by solve_R.
+    replace (|l| + 2) with (/ (1 / (|l| + 2))) by solve_R.
+    apply Rle_ge, Rinv_le_contravar; auto.
+    unfold x; apply Rmin_r.
+  }
+  solve_R.
+Qed.

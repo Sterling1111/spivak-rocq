@@ -291,6 +291,18 @@ Lemma limit_subst : forall f a L1 L2,
   L1 = L2 -> ⟦ lim a ⟧ f = L1 -> ⟦ lim a ⟧ f = L2.
 Proof. intros f a L1 L2 -> H. exact H. Qed.
 
+Lemma limit_left_subst : forall f a L1 L2,
+  L1 = L2 -> ⟦ lim a⁻ ⟧ f = L1 -> ⟦ lim a⁻ ⟧ f = L2.
+Proof.
+  intros f a L1 L2 -> H1. exact H1.
+Qed.
+
+Lemma limit_right_subst : forall f a L1 L2,
+  L1 = L2 -> ⟦ lim a⁺ ⟧ f = L1 -> ⟦ lim a⁺ ⟧ f = L2.
+Proof.
+  intros f a L1 L2 -> H1. exact H1.
+Qed.
+
 Lemma limit_unique : forall f a L1 L2,
   ⟦ lim a ⟧ f = L1 -> ⟦ lim a ⟧ f = L2 -> L1 = L2. 
 Proof.

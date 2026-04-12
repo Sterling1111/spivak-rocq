@@ -2556,6 +2556,52 @@ Proof.
     -- apply FTC1; auto.
 Qed.
 
+Lemma FTC1_global : forall f a,
+  continuous f -> 
+  ⟦ der ⟧ (fun x => ∫ a x f) = f.
+Proof.
+  intros f a H1 x.
+  replace (fun z => ∫ a z f) 
+    with (fun z => ∫ (x - 1) z f - ∫ (x - 1) a f).
+  2: { extensionality z. 
+       pose proof integral_minus' f (x - 1) z a as H2.
+       assert (H3 : integrable_on (Rmin (x - 1) (Rmin z a)) (Rmax (x - 1) (Rmax z a)) f).
+       { apply theorem_13_3; [solve_R |]. 
+         apply continuous_imp_continuous_on. exact H1. }
+       specialize (H2 H3).
+       lra. }
+  eapply derivative_at_ext_val.
+  - apply derivative_at_minus.
+    + apply derivative_on_imp_derivative_at with (D := [x - 1, x + 1]).
+      * exists 1. split; [lra|]. intros z H4. solve_R.
+      * apply FTC1; [lra|]. apply continuous_imp_continuous_on. exact H1.
+    + apply derivative_at_const.
+  - simpl. lra.
+Qed.
+
+Lemma FTC1'_global : forall f b,
+  continuous f -> 
+  ⟦ der ⟧ (fun x => ∫ x b f) = (- f)%function.
+Proof.
+  intros f b H1 x.
+  replace (fun z => ∫ z b f) 
+    with (fun z => ∫ z (x + 1) f - ∫ b (x + 1) f).
+  2: { extensionality z. 
+       pose proof integral_minus' f z (x + 1) b as H2.
+       assert (H3 : integrable_on (Rmin z (Rmin (x + 1) b)) (Rmax z (Rmax (x + 1) b)) f).
+       { apply theorem_13_3; [solve_R |]. 
+         apply continuous_imp_continuous_on. exact H1. }
+       specialize (H2 H3).
+       lra. }
+  eapply derivative_at_ext_val.
+  - apply derivative_at_minus.
+    + apply derivative_on_imp_derivative_at with (D := [x - 1, x + 1]).
+      * exists 1. split; [lra|]. intros z H4. solve_R.
+      * apply FTC1'; [lra|]. apply continuous_imp_continuous_on. exact H1.
+    + apply derivative_at_const.
+  - simpl. lra.
+Qed.
+
 Theorem FTC2 : ∀ a b f g,
     a < b -> continuous_on f [a, b] -> ⟦ der ⟧ g [a, b] = f -> ∫ a b f = g b - g a.
 Proof.
