@@ -5,7 +5,9 @@ Lemma lemma_15_1_i : forall x,
     (fun x => 1 / (1 + (arctan (arctan x))^2) *
               (1 / (1 + (arctan x)^2)) *
               (1 / (1 + x^2))).
-Admitted.
+Proof.
+  auto_diff.
+Qed.
 
 Lemma lemma_15_1_ii : forall x,
   -1 < x < 1 ->
@@ -13,6 +15,8 @@ Lemma lemma_15_1_ii : forall x,
     (fun x => 1 / √(1 - (arctan (arccos x))^2) *
               (1 / (1 + (arccos x)^2)) *
               (-1 / √(1 - x^2))).
+Proof.
+  auto_diff.
 Admitted.
 
 Lemma lemma_15_1_iii : forall x,
@@ -20,18 +24,23 @@ Lemma lemma_15_1_iii : forall x,
   ⟦ der x ⟧ (fun x => arctan (tan x * arctan x)) =
     (fun x => 1 / (1 + (tan x * arctan x)^2) *
               (sec x^2 * arctan x + tan x * (1 / (1 + x^2)))).
-Admitted.
+Proof.
+  auto_diff. unfold tan, sec. solve_R.
+Qed.
 
 Lemma lemma_15_1_iv : forall x,
   x > 0 ->
   ⟦ der x ⟧ (fun x => arcsin (1 / √(1 + x^2))) =
     (fun x => -1 / (1 + x^2)).
+Proof.
+  auto_diff.
 Admitted.
 
 Lemma lemma_15_1_v : forall a b,
   a < b ->
   ⟦ der ⟧ (fun x => ∫ a b (fun t => x / (1 + t^2 + (sin t)^2))) =
     (fun x => ∫ a b (fun t => 1 / (1 + t^2 + (sin t)^2))).
+Proof.
 Admitted.
 
 Lemma lemma_15_1_vi : forall x,

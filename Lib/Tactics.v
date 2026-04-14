@@ -684,6 +684,12 @@ Ltac compute_tp :=
   compute_Der;
   try solve_R.
 
+Ltac step_lhopital f_prime g_prime :=
+  apply lhopital_0_0 with (f' := f_prime) (g' := g_prime);
+  try solve [auto_limit];
+  try solve [auto_diff];
+  try solve [ (exists (1/10); split; try lra; auto_diff) ].
+
 Module Tactic_Tests.
 
 Example FTC2_test : ∫ 0 1 (λ x : ℝ, 2 * x) = 1.
