@@ -1250,6 +1250,29 @@ Proof.
   pose proof intermediate_value_theorem (fun x => -1 * f x) a b (-c) H1 H4 ltac:(solve_R) as [x [H5 H6]]. exists x; split; solve_R.
 Qed.
 
+Theorem intermediate_value_theorem_unordered : forall f a b c,
+  continuous f -> c ∈ [Rmin (f a) (f b), Rmax (f a) (f b)] -> exists x, x ∈ [Rmin a b, Rmax a b] /\ f x = c.
+Proof.
+  intros f a b c H1 H2.
+  destruct (Rle_dec a b) as [H3 | H3]; destruct (Rle_dec (f a) (f b)) as [H4 | H4].
+  - destruct (Req_dec_T a b) as [H5 | H5].
+    + subst b. exists a. solve_R.
+    + destruct (intermediate_value_theorem f a b c ltac:(lra) (continuous_imp_continuous_on f [a, b] H1) ltac:(solve_R)) as [x H7].
+      exists x. solve_R.
+  - destruct (Req_dec_T a b) as [H5 | H5].
+    + subst b. exists a. solve_R.
+    + destruct (intermediate_value_theorem_decreasing f a b c ltac:(lra) (continuous_imp_continuous_on f [a, b] H1) ltac:(solve_R)) as [x H7].
+      exists x. solve_R.
+  - destruct (Req_dec_T a b) as [H5 | H5].
+    + subst b. exists a; solve_R.
+    + destruct (intermediate_value_theorem_decreasing f b a c ltac:(lra) (continuous_imp_continuous_on f [b, a] H1) ltac:(solve_R)) as [x H7].
+      exists x. solve_R.
+  - destruct (Req_dec_T a b) as [H5 | H5].
+    + subst b. exists a. solve_R.
+    + destruct (intermediate_value_theorem f b a c ltac:(lra) (continuous_imp_continuous_on f [b, a] H1) ltac:(solve_R)) as [x H7].
+      exists x. solve_R.
+Qed.
+
 Theorem continuous_on_interval_bounded_below_ge : forall f a b,
   a < b -> continuous_on f [a, b] -> exists N, forall x, x ∈ [a, b] -> f x >= N.
 Proof.

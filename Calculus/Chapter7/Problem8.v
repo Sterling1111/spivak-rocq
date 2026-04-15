@@ -1,13 +1,5 @@
 From Calculus.Chapter7 Require Import Prelude.
 
-Lemma example : forall (f g : R -> R),
-  f = g -> forall x, f x = g x.
-Proof.
-  intros f g H x.
-  rewrite H.
-  reflexivity.
-Qed.
-
 Lemma exercise_7_8 : forall f g,
   continuous f ->
   continuous g ->
@@ -16,36 +8,42 @@ Lemma exercise_7_8 : forall f g,
   (forall x, f x = g x) \/ (forall x, f x = - g x).
 Proof.
   intros f g H1 H2 H3 H4.
-  set (h := (g / f)%function).
-  assert (H5 : continuous h).
-  { unfold h. intros a. specialize (H1 a). specialize (H2 a). auto_cont. }
-  assert (H6 : forall x, h x = 1 \/ h x = -1).
+  pose proof classic ((∀ x : ℝ, f x = g x) ∨ ∀ x : ℝ, f x = - g x) as [H5 | H5]; auto.
+  exfalso.
+  apply not_or_and in H5 as [H5 H6].
+  apply not_all_ex_not in H5 as [x H7].
+  apply not_all_ex_not in H6 as [y H8].
+
+  assert (H9 : forall z, f z = g z \/ f z = - g z).
   {
-    intros x. unfold h. apply (example (f^2)%function (g^2)%function) with (x := x) in H3.
-    simpl in H3. specialize (H4 x).
-    assert (f x * f x = g x * g x) by nra.
-    apply Rsqr_eq in H. destruct H;
-    [ left | right ]; unfold Rdiv; rewrite H; field; nra.
+    intros z. apply equal_f with (x := z) in H3.
+    simpl in H3. repeat rewrite Rmult_1_r in H3.
+    apply Rsqr_eq in H3 as [H3 | H3]; [ left | right ]; solve_R.
   }
-  assert (H_const : (forall x, h x = 1) \/ (forall x, h x = -1)).
+
+  destruct (H9 x) as [H10 | H10]; destruct (H9 y) as [H11 | H11]; try lra.
+
+  assert ((forall x, f x > 0) \/ (forall x, f x < 0)) as [H12 | H12].
   {
-    destruct (classic (forall x, h x = 1)) as [H7 | H7]; auto.
-    right. intros x1. destruct (H6 x1) as [H8 | H8]; auto.
+    pose proof classic ((∀ x0 : ℝ, f x0 > 0) ∨ ∀ x0 : ℝ, f x0 < 0) as [H12 | H12]; auto.
     exfalso.
-    apply not_all_ex_not in H7 as [x2 H9].
-    assert (H10 : h x2 = -1). { specialize (H6 x2). tauto. }
-    pose proof Rtotal_order x1 x2 as [H11 | [H11 | H11]].
-    - pose proof intermediate_value_theorem_decreasing h x1 x2 0 H11 ltac:(apply continuous_imp_continuous_on; auto) ltac:(lra) as [c [H12 H13]].
-      specialize (H6 c). lra.
-    - subst. lra.
-    - pose proof intermediate_value_theorem h x2 x1 0 H11 ltac:(apply continuous_imp_continuous_on; auto) ltac:(lra) as [c [H12 H13]].
-      specialize (H6 c). lra.
+    apply not_or_and in H12 as [H12 H13].
+    apply not_all_ex_not in H12 as [z H12].
+    apply not_all_ex_not in H13 as [w H13].
+    apply Rnot_gt_le in H12 as [H12 | H12];
+    apply Rnot_lt_ge in H13 as [H13 | H13]; 
+    try solve [ apply (H4 z); auto | apply (H4 w); auto].
+
+    pose proof intermediate_value_theorem_unordered f z w 0 H1 ltac:(solve_R) as [v [H14 H15]].
+    apply (H4 v); auto.
   }
-  destruct H_const as [H7 | H7].
-  - left. intros x. specialize (H7 x). unfold h in H7.
-    apply Rmult_eq_compat_r with (r := f x) in H7.
-    field_simplify in H7; auto.
-  - right. intros x. specialize (H7 x). unfold h in H7.
-    apply Rmult_eq_compat_r with (r := f x) in H7.
-    field_simplify in H7; auto. lra.
+
+  - assert (H13 : g x < 0) by (pose proof (H12 x); lra).
+    assert (H14 : g y > 0) by (pose proof (H12 y); lra).
+    destruct (intermediate_value_theorem_unordered g x y 0 H2 ltac:(solve_R)) as [c [_ H16]].
+    specialize (H9 c). apply (H4 c); lra.
+  - assert (H13 : g x > 0) by (pose proof (H12 x); lra).
+    assert (H14 : g y < 0) by (pose proof (H12 y); lra).
+    destruct (intermediate_value_theorem_unordered g x y 0 H2 ltac:(solve_R)) as [c [_ H16]].
+    specialize (H9 c). apply (H4 c); lra.
 Qed.

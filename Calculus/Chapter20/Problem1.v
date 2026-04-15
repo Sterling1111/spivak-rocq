@@ -64,5 +64,5 @@ Proof.
   compute_tp.
   apply sum_f_equiv; try lia.
   intros k H1.
-  
+  induction k as [| k IH]; [ solve_R |].
 Admitted.
