@@ -5,6 +5,10 @@
 -arg -quiet
 -arg -w -arg "-uniform-inheritance,-ambiguous-paths,-deprecated-dirpath-Coq"
 
+-docroot calculus
+
+META.calculus
+
 # =========
 # Lib (API)
 # =========

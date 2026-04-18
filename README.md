@@ -180,7 +180,7 @@ Proof. auto_cont. Qed.
 - `Calculus/`: Chapter- and problem-indexed files with worked formal proofs from the Calculus text. Currently features 603 stated problems, with **145 problems fully verified** (zero admitted lemmas).
 
 - `ATTAM/`: Companion chapters depending only on `Lib/`.
-- `_CoqProject`: Coq project configuration (logical roots and file list).
+- `_RocqProject`: Coq project configuration (logical roots and file list).
 
 ## How to build and explore
 
@@ -204,22 +204,22 @@ g++ -O3 simplex.cpp -o simplex_solver
 
 ### Compiling the Project
 
-The recommended way to build the project is by generating a `Makefile` from the `_CoqProject` file using `coq_makefile` (part of Rocq/Coq's standard tooling) and then running `make`.
+The recommended way to build the project is by generating a `Makefile` from the `_RocqProject` file using `rocq makefile` (part of Rocq/Coq's standard tooling) and then running `make`.
 
 ```bash
 # Generate the Makefile
-coq_makefile -f _CoqProject -o Makefile
+rocq makefile -f _RocqProject -o Makefile
 
-# Build everything listed in _CoqProject concurrently
+# Build everything listed in _RocqProject concurrently
 make -j
 
 # Clean build artifacts
 make clean
 ```
 
-If `coq_makefile` is not found, install the `coq` package from your OS or opam, or ensure it is on your PATH.
+If `rocq makefile` is not found, install the `coq` package from your OS or opam, or ensure it is on your PATH.
 
-Alternatively, you can load the project in CoqIDE/VS Code with the `_CoqProject` file so qualified paths (`Lib/…`, `Calculus/…`) resolve automatically.
+Alternatively, you can load the project in CoqIDE/VS Code with the `_RocqProject` file so qualified paths (`Lib/…`, `Calculus/…`) resolve automatically.
 
 ## Contributing
 
