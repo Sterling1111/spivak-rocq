@@ -1,6 +1,6 @@
 From Lib Require Import Imports Notations Reals_util Sets Limit Continuity Derivative Integral Trigonometry Functions Interval Sums Exponential.
 Import IntervalNotations SetNotations FunctionNotations DerivativeNotations LimitNotations IntegralNotations SumNotations.
-
+Declare ML Module "simplex_plugin.plugin".
 Inductive expr :=
 | EVar
 | EConst (c : R)
@@ -606,32 +606,9 @@ Ltac auto_cont :=
       repeat split; try solve [ simpl; try eval_math_constants; try solve_denoms; try lra; solve_R | auto ]
   end.
 
-Ltac auto_diff :=
-  intros;
-  try solve [ solve_R ];
-  normalize_math_funs;
-  
-  try match goal with 
-  | [ |- ⟦ der ⟧ (fun t => ∫ ?a t ?f) = _ ] => 
-      apply FTC1_global; try auto_cont
-  | [ |- ⟦ der ⟧ (fun t => ∫ t ?b ?f) = _ ] => 
-      apply FTC1'_global; try auto_cont
-  end;
-
-  try (match goal with 
-       | [ |- ⟦ der ⟧ _ ?D = _ ] => 
-           apply derivative_at_imp_derivative_on; 
-           [ try apply differentiable_domain_open; 
-             try apply differentiable_domain_closed; 
-             try apply differentiable_domain_gt; 
-             try apply differentiable_domain_lt; 
-             try solve [ simpl; try eval_math_constants; try solve_denoms; try lra; solve_R ]
-           | let x := fresh "x" in let H1 := fresh "H" in intros x H1 ] 
-       end);
-       
+Ltac auto_diff_core :=
   try change_deriv_to_eval;
-  
-  match goal with
+  try match goal with
   | [ |- ⟦ der ?y ⟧ (fun t => eval_expr ?e t) = ?rhs ] =>
       apply derivative_at_ext_val with (f' := fun t => eval_expr (derive_expr e) t);
       [ apply derive_correct; 
@@ -647,6 +624,71 @@ Ltac auto_diff :=
         repeat split; 
         try solve [ try solve_denoms; try lra; solve_R | auto ]
       | let x := fresh "x" in extensionality x; unfold compose in *; try diff_simplify ]
+  end.
+
+Ltac auto_diff :=
+  intros;
+  try solve [ solve_R ];
+  normalize_math_funs;
+  
+  try match goal with 
+  | [ |- ⟦ der ⟧ (fun t => ∫ ?a t ?f) = _ ] => 
+      apply FTC1_global; try auto_cont
+  | [ |- ⟦ der ⟧ (fun t => ∫ t ?b ?f) = _ ] => 
+      apply FTC1'_global; try auto_cont
+  end;
+
+  match goal with 
+  | |- ⟦ der ⟧ _ ?D = _ => 
+      apply derivative_at_imp_derivative_on; 
+      [ try apply differentiable_domain_open; 
+        try apply differentiable_domain_closed; 
+        try apply differentiable_domain_gt; 
+        try apply differentiable_domain_lt; 
+        try solve [ simpl; try eval_math_constants; try solve_denoms; try lra; solve_R ]
+      | let x := fresh "x" in let H1 := fresh "H" in intros x H1; auto_diff_core ] 
+  | _ => auto_diff_core
+  end.
+
+Ltac get_antiderivative g :=
+  match goal with
+  | |- context [ ∫ ?a ?b ?f ] =>
+      let x := fresh "x" in
+      let f_ast := match constr:(fun x : R => ltac:(
+          let fx := eval cbv beta in (f x) in
+          let e := reify_expr x fx in
+          exact e
+      )) with fun _ => ?e => e end in
+      let E_name := fresh "E" in
+      call_auto_int E_name f_ast;
+      pose (g := fun x : R => eval_expr E_name x);
+      cbv [E_name eval_expr] in g;
+      clear E_name
+  end.
+
+Ltac auto_int :=
+  intros;
+  try solve [ solve_R ];
+  match goal with
+  | |- ∫ ?a ?b ?f = ?v =>
+      let g := fresh "g" in
+      get_antiderivative g;
+      let H1 := fresh "H" in
+      assert (H1 : a < b);
+      [ clear g; try solve [ lra | solve_R ]
+      | let H2 := fresh "H" in
+        assert (H2 : continuous_on f [a, b]);
+        [ clear H1 g; auto_cont; try solve [ lra | solve_R ]
+        | let H3 := fresh "H" in
+          assert (H3 : ⟦ der ⟧ g [a, b] = f);
+          [ clear H1 H2; unfold g; auto_diff; try solve [ lra | solve_R ]
+          | let H_FTC := fresh "H_FTC" in
+            pose proof (FTC2 a b f g H1 H2 H3) as H_FTC;
+            rewrite H_FTC; unfold g; clear H_FTC H3 H2 H1 g; try solve [ lra | solve_R ] ] ] ]
+  | |- antiderivative ?f ?F =>
+      unfold antiderivative; auto_diff
+  | |- antiderivative_on ?f ?F ?D =>
+      unfold antiderivative_on; auto_diff
   end.
 
 Ltac compute_Der :=
@@ -695,18 +737,36 @@ Module Tactic_Tests.
 
 Example FTC2_test : ∫ 0 1 (λ x : ℝ, 2 * x) = 1.
 Proof.
-  set (f := λ x : ℝ, 2 * x).
-  set (g := λ x : ℝ, x^2).
-  assert (H1 : 0 < 1) by lra.
-  assert (H2 : continuous_on f [0, 1]). { unfold f. auto_cont. }
-  assert (H3 : ⟦ der ⟧ g [0, 1] = f) by (unfold f, g; auto_diff).
-  replace 1 with (g 1 - g 0) at 2 by (unfold g; lra).
-  apply (FTC2 0 1 f g H1 H2 H3).
+  auto_int.
 Qed.
 
 Lemma integral_sin5_cos : ∫ (λ x, sin x ^ 5 * cos x) = (λ x, sin x ^ 6 / 6).
 Proof.
-  unfold antiderivative; auto_diff.
+  auto_int.
+Qed.
+
+Lemma test_def_int_poly : ∫ 0 2 (λ x : ℝ, 3 * x^2) = 8.
+Proof. auto_int. Qed.
+
+Lemma test_def_int_exp : ∫ 0 1 (λ x : ℝ, exp x) = e - 1.
+Proof. auto_int. unfold e. eval_math_constants. lra. Qed.
+
+Lemma test_def_int_trig : ∫ 0 π (λ x : ℝ, sin x) = 2.
+Proof. auto_int. apply π_pos. eval_math_constants. rewrite cos_π. lra. Qed.
+
+Lemma test_def_int_cos : ∫ 0 π (λ x : ℝ, cos x) = 0.
+Proof. auto_int. apply π_pos. eval_math_constants. rewrite sin_π. lra. Qed.
+  
+Lemma test_indef_int_exp : antiderivative (λ x : ℝ, exp x) (λ x : ℝ, exp x).
+Proof. auto_int. Qed.
+
+Lemma test_indef_int_poly : antiderivative (λ x : ℝ, x^2 + 2*x) (λ x : ℝ, x^3/3 + x^2).
+Proof. auto_int. Qed.
+
+Lemma test_def_int_inv : ∫ 1 2 (λ x : ℝ, 1 / x) = log 2.
+Proof. 
+  auto_int. 
+  rewrite log_1. lra. 
 Qed.
 
 Lemma test_auto_cont : continuous (λ x, sin (x^2 + 1)).

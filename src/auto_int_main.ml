@@ -11,13 +11,15 @@ let read_lines file =
   in
   read_acc []
 
-let locate_construct name =
+let mk_global name =
   match Nametab.locate (Libnames.qualid_of_string name) with
-  | Names.GlobRef.ConstructRef c -> c
-  | _ -> failwith ("Not a construct: " ^ name)
+  | Names.GlobRef.ConstructRef c -> EConstr.UnsafeMonomorphic.mkConstruct c
+  | Names.GlobRef.ConstRef c -> EConstr.UnsafeMonomorphic.mkConst c
+  | Names.GlobRef.IndRef c -> EConstr.UnsafeMonomorphic.mkInd c
+  | Names.GlobRef.VarRef c -> EConstr.mkVar c
 
-let mk_construct name = EConstr.UnsafeMonomorphic.mkConstruct (locate_construct name)
-let mk_App name args = EConstr.mkApp (mk_construct name, Array.of_list args)
+let mk_construct name = mk_global name
+let mk_App name args = EConstr.mkApp (mk_global name, Array.of_list args)
 
 let rec parse_prefix lines =
   match !lines with
@@ -129,10 +131,10 @@ let run_auto_int env sigma f_term =
   close_out oc;
   
   let python_exe = 
-    if Sys.file_exists ".auto_int_venv/bin/python3" then ".auto_int_venv/bin/python3"
+    if Sys.file_exists "/home/sij/Calculus-with-Coq/.auto_int_venv/bin/python3" then "/home/sij/Calculus-with-Coq/.auto_int_venv/bin/python3"
     else "python3" 
   in
-  let cmd = Printf.sprintf "%s auto_int.py %s %s" python_exe in_file out_file in
+  let cmd = Printf.sprintf "%s /home/sij/Calculus-with-Coq/auto_int.py %s %s" python_exe in_file out_file in
   let exit_code = Sys.command cmd in
   if exit_code <> 0 then failwith (Printf.sprintf "auto_int script failed with code %d" exit_code);
   

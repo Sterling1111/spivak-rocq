@@ -36,5 +36,27 @@ let () = Tacentries.tactic_extend "simplex_plugin.plugin" "call_simplex_plugin" 
     )
   
 # 39 "src/g_simplex.ml"
+)));
+         (Tacentries.TyML (Tacentries.TyIdent ("call_auto_int", Tacentries.TyArg (
+                                                                Extend.TUentry (Genarg.get_arg_tag wit_ident), 
+                                                                Tacentries.TyArg (
+                                                                Extend.TUentry (Genarg.get_arg_tag wit_constr), 
+                                                                Tacentries.TyNil))), 
+          (fun cert_name f_term ist -> 
+# 30 "src/g_simplex.mlg"
+                                                          
+    Proofview.Goal.enter (fun gl ->
+      let env = Proofview.Goal.env gl in
+      let sigma = Proofview.Goal.sigma gl in
+      
+      (try
+        let cert_term = Auto_int_main.run_auto_int env sigma f_term in
+        let name = Names.Name cert_name in
+        Tactics.pose_tac name cert_term
+      with Failure msg ->
+        Tacticals.tclZEROMSG (str msg))
+    )
+  
+# 61 "src/g_simplex.ml"
 )))]
 
