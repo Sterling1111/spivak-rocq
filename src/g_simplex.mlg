@@ -27,17 +27,4 @@ TACTIC EXTEND call_simplex_plugin
         Tacticals.tclZEROMSG (str msg))
     )
   }
-| [ "call_auto_int" ident(cert_name) constr(f_term) ] -> {
-    Proofview.Goal.enter (fun gl ->
-      let env = Proofview.Goal.env gl in
-      let sigma = Proofview.Goal.sigma gl in
-      
-      (try
-        let cert_term = Auto_int_main.run_auto_int env sigma f_term in
-        let name = Names.Name cert_name in
-        Tactics.pose_tac name cert_term
-      with Failure msg ->
-        Tacticals.tclZEROMSG (str msg))
-    )
-  }
 END

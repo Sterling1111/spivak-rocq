@@ -144,10 +144,11 @@ Calculus/Chapter23/Prelude.v
 
 Calculus/Chapter24/Prelude.v
 
--generate-meta-for-package simplex_plugin
 -I src
 
 src/auto_int_main.ml
 src/simplex_main.ml
 src/g_simplex.mlg
+src/g_auto_int.mlg
 src/simplex_plugin.mlpack
+src/auto_int_plugin.mlpack

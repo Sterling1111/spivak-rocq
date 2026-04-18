@@ -1,0 +1,10 @@
+
+package "plugin" (
+  directory = "."
+  requires = "rocq-runtime.plugins.ltac"
+  archive(byte) = "auto_int_plugin.cma"
+  archive(native) = "auto_int_plugin.cmxa"
+  plugin(byte) = "auto_int_plugin.cma"
+  plugin(native) = "auto_int_plugin.cmxs"
+)
+directory = "."

@@ -1,6 +1,8 @@
 From Lib Require Import Imports Notations Reals_util Sets Limit Continuity Derivative Integral Trigonometry Functions Interval Sums Exponential.
 Import IntervalNotations SetNotations FunctionNotations DerivativeNotations LimitNotations IntegralNotations SumNotations.
-Declare ML Module "simplex_plugin.plugin".
+
+Declare ML Module "auto_int_plugin.plugin".
+
 Inductive expr :=
 | EVar
 | EConst (c : R)
@@ -509,11 +511,27 @@ Ltac normalize_math_funs :=
 Ltac eval_math_constants :=
   try rewrite sin_0 in *;
   try rewrite cos_0 in *;
+  try rewrite tan_0 in *;
+  try rewrite sin_π in *;
+  try rewrite cos_π in *;
+  try rewrite sin_π_over_2 in *;
+  try rewrite cos_π_over_2 in *;
+  try rewrite sin_pi_6 in *;
+  try rewrite cos_pi_6 in *;
+  try rewrite tan_pi_6 in *;
+  try rewrite sin_pi_4 in *;
+  try rewrite cos_pi_4 in *;
+  try rewrite tan_pi_4 in *;
+  try rewrite sin_pi_3 in *;
+  try rewrite cos_pi_3 in *;
+  try rewrite tan_pi_3 in *;
   try rewrite exp_0 in *;
   try rewrite log_1 in *;
   try rewrite ln_1 in *;
   try rewrite log_e in *;
-  try rewrite ln_e in *.
+  try rewrite ln_e in *;
+  try rewrite sqrt_1 in *;
+  try rewrite sqrt_0 in *.
 
 Ltac solve_denoms :=
   simpl in *;
@@ -675,16 +693,16 @@ Ltac auto_int :=
       get_antiderivative g;
       let H1 := fresh "H" in
       assert (H1 : a < b);
-      [ clear g; try solve [ lra | solve_R ]
+      [ clear g; try eval_math_constants; try solve [ lra | solve_R ]
       | let H2 := fresh "H" in
         assert (H2 : continuous_on f [a, b]);
-        [ clear H1 g; auto_cont; try solve [ lra | solve_R ]
+        [ clear H1 g; auto_cont; try eval_math_constants; try solve [ lra | solve_R ]
         | let H3 := fresh "H" in
           assert (H3 : ⟦ der ⟧ g [a, b] = f);
-          [ clear H1 H2; unfold g; auto_diff; try solve [ lra | solve_R ]
+          [ clear H1 H2; unfold g; auto_diff; try eval_math_constants; try solve [ lra | solve_R ]
           | let H_FTC := fresh "H_FTC" in
             pose proof (FTC2 a b f g H1 H2 H3) as H_FTC;
-            rewrite H_FTC; unfold g; clear H_FTC H3 H2 H1 g; try solve [ lra | solve_R ] ] ] ]
+            rewrite H_FTC; unfold g; clear H_FTC H3 H2 H1 g; try eval_math_constants; try solve [ lra | solve_R ] ] ] ]
   | |- antiderivative ?f ?F =>
       unfold antiderivative; auto_diff
   | |- antiderivative_on ?f ?F ?D =>
@@ -749,13 +767,13 @@ Lemma test_def_int_poly : ∫ 0 2 (λ x : ℝ, 3 * x^2) = 8.
 Proof. auto_int. Qed.
 
 Lemma test_def_int_exp : ∫ 0 1 (λ x : ℝ, exp x) = e - 1.
-Proof. auto_int. unfold e. eval_math_constants. lra. Qed.
+Proof. auto_int. Qed.
 
 Lemma test_def_int_trig : ∫ 0 π (λ x : ℝ, sin x) = 2.
-Proof. auto_int. apply π_pos. eval_math_constants. rewrite cos_π. lra. Qed.
+Proof. auto_int. apply π_pos. Qed.
 
 Lemma test_def_int_cos : ∫ 0 π (λ x : ℝ, cos x) = 0.
-Proof. auto_int. apply π_pos. eval_math_constants. rewrite sin_π. lra. Qed.
+Proof. auto_int. apply π_pos. Qed.
   
 Lemma test_indef_int_exp : antiderivative (λ x : ℝ, exp x) (λ x : ℝ, exp x).
 Proof. auto_int. Qed.
@@ -766,7 +784,6 @@ Proof. auto_int. Qed.
 Lemma test_def_int_inv : ∫ 1 2 (λ x : ℝ, 1 / x) = log 2.
 Proof. 
   auto_int. 
-  rewrite log_1. lra. 
 Qed.
 
 Lemma test_auto_cont : continuous (λ x, sin (x^2 + 1)).

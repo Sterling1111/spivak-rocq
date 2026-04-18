@@ -21,6 +21,23 @@ let mk_global name =
 let mk_construct name = mk_global name
 let mk_App name args = EConstr.mkApp (mk_global name, Array.of_list args)
 
+let rec mk_nat n =
+  if n <= 0 then mk_construct "O"
+  else mk_App "S" [mk_nat (n - 1)]
+
+let rec mk_pos n =
+  if n = 1 then mk_construct "xH"
+  else if n mod 2 = 0 then mk_App "xO" [mk_pos (n / 2)]
+  else mk_App "xI" [mk_pos (n / 2)]
+
+let extract_num env sigma t =
+  let s = Pp.string_of_ppcmds (Printer.pr_econstr_env env sigma t) in
+  let is_digit c = (c >= '0' && c <= '9') || c = '-' in
+  let len = String.length s in
+  let buf = Buffer.create len in
+  String.iter (fun c -> if is_digit c then Buffer.add_char buf c) s;
+  int_of_string (Buffer.contents buf)
+
 let rec parse_prefix lines =
   match !lines with
   | [] -> failwith "Unexpected end of output"
@@ -36,8 +53,8 @@ let rec parse_prefix lines =
           let n = int_of_string v in
           let z = if n >= 0 then 
                     if n = 0 then mk_construct "Z0"
-                    else mk_App "Zpos" [Simplex_main.mk_pos n]
-                  else mk_App "Zneg" [Simplex_main.mk_pos (-n)] in
+                    else mk_App "Zpos" [mk_pos n]
+                  else mk_App "Zneg" [mk_pos (-n)] in
           let r = mk_App "IZR" [z] in
           mk_App "EConst" [r]
       | "ENeg" -> mk_App "ENeg" [parse_prefix lines]
@@ -62,7 +79,7 @@ let rec parse_prefix lines =
           let n_str = List.hd !lines in
           lines := List.tl !lines;
           let n = int_of_string n_str in
-          mk_App "EPow" [base; Simplex_main.mk_nat n]
+          mk_App "EPow" [base; mk_nat n]
       | "ERpow" ->
           let base = parse_prefix lines in
           let r_str = List.hd !lines in
@@ -72,15 +89,15 @@ let rec parse_prefix lines =
             let p_str, q_str = match String.split_on_char '/' r_str with | [p;q] -> p,q | _ -> failwith "" in
             let p = int_of_string p_str in
             let q = int_of_string q_str in
-            let zp = if p >= 0 then if p = 0 then mk_construct "Z0" else mk_App "Zpos" [Simplex_main.mk_pos p] else mk_App "Zneg" [Simplex_main.mk_pos (-p)] in
-            let zq = if q >= 0 then if q = 0 then mk_construct "Z0" else mk_App "Zpos" [Simplex_main.mk_pos q] else mk_App "Zneg" [Simplex_main.mk_pos (-q)] in
+            let zp = if p >= 0 then if p = 0 then mk_construct "Z0" else mk_App "Zpos" [mk_pos p] else mk_App "Zneg" [mk_pos (-p)] in
+            let zq = if q >= 0 then if q = 0 then mk_construct "Z0" else mk_App "Zpos" [mk_pos q] else mk_App "Zneg" [mk_pos (-q)] in
             let rp = mk_App "IZR" [zp] in
             let rq = mk_App "IZR" [zq] in
             let r = mk_App "Rdiv" [rp; rq] in
             mk_App "ERpow" [base; r]
            with _ ->
             let n = int_of_string r_str in
-            let z = if n >= 0 then if n = 0 then mk_construct "Z0" else mk_App "Zpos" [Simplex_main.mk_pos n] else mk_App "Zneg" [Simplex_main.mk_pos (-n)] in
+            let z = if n >= 0 then if n = 0 then mk_construct "Z0" else mk_App "Zpos" [mk_pos n] else mk_App "Zneg" [mk_pos (-n)] in
             let r = mk_App "IZR" [z] in
             mk_App "ERpow" [base; r])
       | "ERpower" -> mk_App "ERpower" [parse_prefix lines; parse_prefix lines]
@@ -110,9 +127,9 @@ let rec convert_coq_expr_to_python_string env sigma t =
        | "EArcsin" | "@EArcsin" -> "asin(" ^ convert_coq_expr_to_python_string env sigma args.(len - 1) ^ ")"
        | "EArccos" | "@EArccos" -> "acos(" ^ convert_coq_expr_to_python_string env sigma args.(len - 1) ^ ")"
        | "EArctan" | "@EArctan" -> "atan(" ^ convert_coq_expr_to_python_string env sigma args.(len - 1) ^ ")"
-       | "EPow" | "@EPow" -> "(" ^ convert_coq_expr_to_python_string env sigma args.(len - 2) ^ " ** " ^ string_of_int (Simplex_main.extract_num env sigma args.(len - 1)) ^ ")"
+       | "EPow" | "@EPow" -> "(" ^ convert_coq_expr_to_python_string env sigma args.(len - 2) ^ " ** " ^ string_of_int (extract_num env sigma args.(len - 1)) ^ ")"
        | "ERpow" | "@ERpow" | "ERpower" | "@ERpower" -> "(" ^ convert_coq_expr_to_python_string env sigma args.(len - 2) ^ " ** " ^ convert_coq_expr_to_python_string env sigma args.(len - 1) ^ ")"
-       | "EConst" | "@EConst" -> string_of_int (Simplex_main.extract_num env sigma args.(len - 1))
+       | "EConst" | "@EConst" -> string_of_int (extract_num env sigma args.(len - 1))
        | _ -> failwith ("Unknown App: " ^ c_str))
   | Construct _ ->
       let c_str = Pp.string_of_ppcmds (Printer.pr_econstr_env env sigma t) in
