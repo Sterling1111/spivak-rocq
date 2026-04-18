@@ -199,7 +199,7 @@ The project will compile successfully even if the C++ simplex program is not bui
 
 ```bash
 # From the repo root
-g++ -O3 simplex.cpp -o simplex_solver
+g++ -O3 src/simplex.cpp -o src/simplex_solver
 ```
 
 ### Compiling the Project

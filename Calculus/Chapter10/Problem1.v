@@ -23,6 +23,9 @@ Qed.
 Lemma lemma_10_1_i' : ⟦ der ⟧ (λ x, sin (x + x^2)) = (λ x, cos (x + x^2) * (1 + 2 * x)).
 Proof. auto_diff. Qed.
 
+Lemma lemma_10_1_i'' : ⟦ der ⟧ (λ x, sin (x + x^2)) = ⟦ Der ⟧ (λ x, sin (x + x^2)).
+Proof. compute_Der. auto_diff. Qed.
+
 Lemma lemma_10_1_ii : ⟦ der ⟧ (λ x, sin x + sin (x^2)) = (λ x, cos x + cos (x^2) * (2 * x)).
 Proof. auto_diff. Qed.
 

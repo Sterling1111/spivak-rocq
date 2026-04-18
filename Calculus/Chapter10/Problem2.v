@@ -57,6 +57,13 @@ Lemma lemma_10_2_xii : ⟦ der ⟧ (λ x, ((((x^2 + x)^3 + x)^4 + x)^5)) =
   (λ x, 5 * (((x^2 + x)^3 + x)^4 + x)^4 * (4 * ((x^2 + x)^3 + x)^3 * (3 * (x^2 + x)^2 * (2 * x + 1) + 1) + 1)).
 Proof. auto_diff. Qed.
 
+Lemma lemma_10_2_xii' : 
+  let f := (λ x, ((((x^2 + x)^3 + x)^4 + x)^5)) in
+    ⟦ der ⟧ f = ⟦ Der ⟧ f.
+Proof.
+  intros f. unfold f. compute_Der. auto_diff.
+Qed.
+
 Lemma lemma_10_2_xiii : ⟦ der ⟧ (λ x, sin (x^2 + sin (x^2 + sin (x^2)))) = 
   (λ x, cos (x^2 + sin (x^2 + sin (x^2))) * (2 * x + cos (x^2 + sin (x^2)) * (2 * x + cos (x^2) * 2 * x))).
 Proof. auto_diff. Qed.

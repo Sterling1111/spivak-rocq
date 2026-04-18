@@ -3,6 +3,8 @@ Import IntervalNotations SetNotations FunctionNotations DerivativeNotations Limi
 
 Declare ML Module "auto_int_plugin.plugin".
 
+Tactic Notation "call_auto_int" ident(name) constr(t) := ml_call_auto_int name t.
+
 Inductive expr :=
 | EVar
 | EConst (c : R)
@@ -735,7 +737,7 @@ Ltac compute_Der :=
         try solve [try solve_denoms; try lra; solve_R]; auto ]
   end;
   
-  simpl; try eval_math_constants.
+  cbn -[pow]; try eval_math_constants.
 
 Ltac compute_tp :=
   intros;

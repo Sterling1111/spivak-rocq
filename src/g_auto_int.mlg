@@ -6,8 +6,8 @@ open Stdarg
 module Tacentries = Ltac_plugin.Tacentries
 }
 
-TACTIC EXTEND call_auto_int
-| [ "call_auto_int" ident(cert_name) constr(f_term) ] -> {
+TACTIC EXTEND ml_call_auto_int
+| [ "ml_call_auto_int" ident(cert_name) constr(f_term) ] -> {
     Proofview.Goal.enter (fun gl ->
       let env = Proofview.Goal.env gl in
       let sigma = Proofview.Goal.sigma gl in
