@@ -9,18 +9,21 @@ Qed.
 Lemma lemma_19_4_ii : forall c,
   ∫ (λ x, √(1 - x^2)) (-1, 1) = (λ x, x * √(1 - x^2) / 2 + arcsin x / 2 + c).
 Proof.
-  intros c. unfold antiderivative_on. auto_diff. field_simplify.
-  rewrite pow2_sqrt. field_simplify.
-Admitted.
+  auto_int.
+  assert (H1 : √(1 - x * (x * 1)) <> 0).
+  { pose proof sqrt_lt_R0 (1 - x * (x * 1)); solve_R. }
+  apply Rmult_eq_reg_r with (r := √(1 - x * (x * 1))); 
+  try field_simplify; try rewrite pow2_sqrt; solve_R.
+Qed.
 
 Lemma lemma_19_4_iii : forall c,
   ∫ (λ x, 1 / √(1 + x^2)) = (λ x, log (x + √(1 + x^2)) + c).
 Proof.
-  intros c. unfold antiderivative. auto_diff.
+  auto_int.
 Admitted.
 
 Lemma lemma_19_4_iv : forall c,
   ∫ (λ x, √(1 + x^2)) = (λ x, x * √(1 + x^2) / 2 + log (x + √(1 + x^2)) / 2 + c).
 Proof.
-  intros c. unfold antiderivative. auto_diff.
+  auto_int.
 Admitted.
