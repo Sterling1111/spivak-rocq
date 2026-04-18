@@ -6467,6 +6467,7 @@ Proof.
   2: { extensionality x; rewrite Rminus_0_r; reflexivity. }
   apply nth_differentiable_pow_shift.
 Qed.
+
 Lemma derivative_at_Rabs : forall x, x <> 0 -> ⟦ der x ⟧ Rabs = (fun t => t / Rabs t).
 Proof.
   intros x H.

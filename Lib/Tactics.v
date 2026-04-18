@@ -3,6 +3,8 @@ Import IntervalNotations SetNotations FunctionNotations DerivativeNotations Limi
 
 Declare ML Module "auto_int_plugin.plugin".
 
+Arguments Rabs : simpl never.
+
 Tactic Notation "call_auto_int" ident(name) constr(t) := ml_call_auto_int name t.
 
 Inductive expr :=
@@ -25,6 +27,7 @@ Inductive expr :=
 | ESqrt (e : expr)
 | EExp (e : expr)
 | ELog (e : expr)
+| ERabs (e : expr)
 | ERpow (e : expr) (r : R)
 | ERpower (e1 e2 : expr)
 | EPow (e : expr) (n : nat)
@@ -51,6 +54,7 @@ Fixpoint eval_expr (e : expr) (x : R) : R :=
   | ESqrt e => sqrt (eval_expr e x)
   | EExp e => exp (eval_expr e x)
   | ELog e => log (eval_expr e x)
+  | ERabs e => Rabs (eval_expr e x)
   | ERpow e r => (eval_expr e x) ^^ r
   | ERpower e1 e2 => (eval_expr e1 x) ^^ (eval_expr e2 x)
   | EPow e n => (eval_expr e x) ^ n
@@ -62,7 +66,7 @@ Fixpoint wf_limit (e : expr) (a : R) : Prop :=
   | EVar | EConst _ => True
   | EAdd e1 e2 | ESub e1 e2 | EMul e1 e2 => wf_limit e1 a /\ wf_limit e2 a
   | EDiv e1 e2 => wf_limit e1 a /\ wf_limit e2 a /\ eval_expr e2 a <> 0
-  | ENeg e | ESin e | ECos e | EExp e | EPow e _ | EArctan e => wf_limit e a
+  | ENeg e | ESin e | ECos e | EExp e | EPow e _ | EArctan e | ERabs e => wf_limit e a
   | ELog e => wf_limit e a /\ eval_expr e a > 0
   | ERpow e _ => wf_limit e a /\ eval_expr e a > 0
   | ERpower e1 e2 => wf_limit e1 a /\ wf_limit e2 a /\ eval_expr e1 a > 0
@@ -78,7 +82,7 @@ Fixpoint wf_limit_right (e : expr) (a : R) : Prop :=
   | EVar | EConst _ => True
   | EAdd e1 e2 | ESub e1 e2 | EMul e1 e2 => wf_limit_right e1 a /\ wf_limit_right e2 a
   | EDiv e1 e2 => wf_limit_right e1 a /\ wf_limit_right e2 a /\ eval_expr e2 a <> 0
-  | ENeg e | ESin e | ECos e | EExp e | EPow e _ | EArctan e => wf_limit_right e a
+  | ENeg e | ESin e | ECos e | EExp e | EPow e _ | EArctan e | ERabs e => wf_limit_right e a
   | ELog e => wf_limit_right e a /\ eval_expr e a > 0
   | ERpow e _ => wf_limit_right e a /\ eval_expr e a > 0
   | ERpower e1 e2 => wf_limit_right e1 a /\ wf_limit_right e2 a /\ eval_expr e1 a > 0
@@ -94,7 +98,7 @@ Fixpoint wf_limit_left (e : expr) (a : R) : Prop :=
   | EVar | EConst _ => True
   | EAdd e1 e2 | ESub e1 e2 | EMul e1 e2 => wf_limit_left e1 a /\ wf_limit_left e2 a
   | EDiv e1 e2 => wf_limit_left e1 a /\ wf_limit_left e2 a /\ eval_expr e2 a <> 0
-  | ENeg e | ESin e | ECos e | EExp e | EPow e _ | EArctan e => wf_limit_left e a
+  | ENeg e | ESin e | ECos e | EExp e | EPow e _ | EArctan e | ERabs e => wf_limit_left e a
   | ELog e => wf_limit_left e a /\ eval_expr e a > 0
   | ERpow e _ => wf_limit_left e a /\ eval_expr e a > 0
   | ERpower e1 e2 => wf_limit_left e1 a /\ wf_limit_left e2 a /\ eval_expr e1 a > 0
@@ -110,7 +114,7 @@ Fixpoint wf_cont (e : expr) (a : R) : Prop :=
   | EVar | EConst _ => True
   | EAdd e1 e2 | ESub e1 e2 | EMul e1 e2 => wf_cont e1 a /\ wf_cont e2 a
   | EDiv e1 e2 => wf_cont e1 a /\ wf_cont e2 a /\ eval_expr e2 a <> 0
-  | ENeg e | ESin e | ECos e | EExp e | EPow e _ | EArctan e => wf_cont e a
+  | ENeg e | ESin e | ECos e | EExp e | EPow e _ | EArctan e | ERabs e => wf_cont e a
   | ELog e => wf_cont e a /\ eval_expr e a > 0
   | ERpow e _ => wf_cont e a /\ eval_expr e a > 0
   | ERpower e1 e2 => wf_cont e1 a /\ wf_cont e2 a /\ eval_expr e1 a > 0
@@ -128,6 +132,7 @@ Fixpoint wf_derive (e : expr) (x : R) : Prop :=
   | EDiv e1 e2 => wf_derive e1 x /\ wf_derive e2 x /\ eval_expr e2 x <> 0
   | ENeg e | ESin e | ECos e | EExp e | EPow e _ | EArctan e => wf_derive e x
   | ELog e => wf_derive e x /\ eval_expr e x > 0
+  | ERabs e => wf_derive e x /\ eval_expr e x <> 0
   | ERpow e _ => wf_derive e x /\ eval_expr e x > 0
   | ERpower e1 e2 => wf_derive e1 x /\ wf_derive e2 x /\ eval_expr e1 x > 0
   | ETan e | ESec e => wf_derive e x /\ cos (eval_expr e x) <> 0
@@ -159,6 +164,7 @@ Fixpoint derive_expr (e : expr) : expr :=
   | ESqrt e => EDiv (derive_expr e) (EMul (EConst 2) (ESqrt e))
   | EExp e => EMul (EExp e) (derive_expr e)
   | ELog e => EDiv (derive_expr e) e
+  | ERabs e => EMul (EDiv e (ERabs e)) (derive_expr e)
   | ERpow e r => EMul (EMul (EConst r) (ERpow e (r - 1))) (derive_expr e)
   | ERpower e1 e2 => EMul (ERpower e1 e2) (EAdd (EMul (derive_expr e2) (ELog e1)) (EMul e2 (EDiv (derive_expr e1) e1)))
   | EPow e n => match n with 0 => EConst 0 | S k => EMul (EMul (EConst (INR n)) (EPow e k)) (derive_expr e) end
@@ -169,7 +175,7 @@ Fixpoint derive_expr (e : expr) : expr :=
 Lemma right_limit_eval_expr : forall e a,
   wf_limit_right e a -> ⟦ lim a⁺ ⟧ (fun x => eval_expr e x) = eval_expr e a.
 Proof.
-  induction e; intros a H; simpl in *; try solve_R; try apply limit_right_id || apply limit_right_const.
+  induction e; intros a H; cbn -[Rabs] in *; try apply limit_right_id || apply limit_right_const.
   - destruct H as [H1 H2]. apply limit_right_plus; auto.
   - destruct H as [H1 H2]. apply limit_right_minus; auto.
   - destruct H as [H1 H2]. apply limit_right_mult; auto.
@@ -187,6 +193,7 @@ Proof.
   - destruct H as [H1 H2]. apply limit_right_continuous_comp; auto. apply continuous_sqrt.
   - apply limit_right_continuous_comp; auto. apply continuous_exp.
   - destruct H as [H1 H2]. apply limit_right_continuous_comp; auto. apply continuous_at_log; exact H2.
+  - apply limit_right_continuous_comp with (f := Rabs); auto. apply continuous_at_Rabs.
   - destruct H as [H1 H2]. apply limit_right_continuous_comp with (f := fun y => y ^^ r); auto. apply continuous_at_Rpower_const; exact H2.
   - destruct H as [H1 [H2 H3]]. apply continuous_at_right_Rpower_comp; auto.
   - apply limit_right_pow; auto.
@@ -196,7 +203,7 @@ Qed.
 Lemma left_limit_eval_expr : forall e a,
   wf_limit_left e a -> ⟦ lim a⁻ ⟧ (fun x => eval_expr e x) = eval_expr e a.
 Proof.
-  induction e; intros a H1; simpl in *; try solve_R; try apply limit_left_id || apply limit_left_const.
+  induction e; intros a H1; cbn -[Rabs] in *; try apply limit_left_id || apply limit_left_const.
   - destruct H1 as [H2 H3]. apply limit_left_plus; auto.
   - destruct H1 as [H2 H3]. apply limit_left_minus; auto.
   - destruct H1 as [H2 H3]. apply limit_left_mult; auto.
@@ -214,6 +221,7 @@ Proof.
   - destruct H1 as [H2 H3]. apply limit_left_continuous_comp; auto. apply continuous_sqrt.
   - apply limit_left_continuous_comp; auto. apply continuous_exp.
   - destruct H1 as [H2 H3]. apply limit_left_continuous_comp; auto. apply continuous_at_log; exact H3.
+  - apply limit_left_continuous_comp with (f := Rabs); auto. apply continuous_at_Rabs.
   - destruct H1 as [H2 H3]. apply limit_left_continuous_comp with (f := fun y => y ^^ r); auto. apply continuous_at_Rpower_const; exact H3.
   - destruct H1 as [H2 [H3 H4]]. apply continuous_at_left_Rpower_comp; auto.
   - apply limit_left_pow; auto.
@@ -223,7 +231,7 @@ Qed.
 Lemma limit_eval_expr : forall e a,
   wf_limit e a -> ⟦ lim a ⟧ (fun x => eval_expr e x) = eval_expr e a.
 Proof.
-  induction e; intros a H1; simpl in *; try solve_R; try apply limit_id || apply limit_const.
+  induction e; intros a H1; cbn -[Rabs] in *; try apply limit_id || apply limit_const.
   - destruct H1 as [H2 H3]. apply limit_plus; auto.
   - destruct H1 as [H2 H3]. apply limit_minus; auto.
   - destruct H1 as [H2 H3]. apply limit_mult; auto.
@@ -241,6 +249,7 @@ Proof.
   - destruct H1 as [H2 H3]. apply limit_continuous_comp; auto. apply continuous_sqrt.
   - apply limit_continuous_comp; auto. apply continuous_exp.
   - destruct H1 as [H2 H3]. apply limit_continuous_comp; auto. apply continuous_at_log; exact H3.
+  - apply limit_continuous_comp with (f := Rabs); auto. apply continuous_at_Rabs.
   - destruct H1 as [H2 H3]. apply limit_continuous_comp with (f := fun y => y ^^ r); auto. apply continuous_at_Rpower_const; exact H3.
   - destruct H1 as [H2 [H3 H4]]. apply limit_Rpower_comp; auto.
   - apply limit_pow; auto.
@@ -256,7 +265,7 @@ Qed.
 Lemma cont_correct : forall e x,
   wf_cont e x -> continuous_at (λ t, eval_expr e t) x.
 Proof.
-  induction e; intros x H; simpl in *; try solve_R; try apply continuous_at_id || apply continuous_at_const.
+  induction e; intros x H; cbn -[Rabs] in *; try apply continuous_at_id || apply continuous_at_const.
   - destruct H as [H1 H2]. apply continuous_at_plus; auto.
   - destruct H as [H1 H2]. apply continuous_at_minus; auto.
   - destruct H as [H1 H2]. apply continuous_at_mult; auto.
@@ -286,6 +295,8 @@ Proof.
     apply continuous_at_comp; [apply IHe | apply continuous_exp]; auto.
   - destruct H as [H1 H2]. replace (λ t : ℝ, log (eval_expr e t)) with ((log) ∘ (λ t : ℝ, eval_expr e t))%function by reflexivity.
     apply continuous_at_comp; [apply IHe; auto | apply continuous_at_log; auto].
+  - replace (λ t : ℝ, Rabs (eval_expr e t)) with ((Rabs) ∘ (λ t : ℝ, eval_expr e t))%function by reflexivity.
+    apply continuous_at_comp; [apply IHe | apply continuous_at_Rabs]; auto.
   - destruct H as [H1 H2]. replace (λ t : ℝ, eval_expr e t ^^ r) with ((λ y, y ^^ r) ∘ (λ t : ℝ, eval_expr e t))%function by reflexivity.
     apply continuous_at_comp; [apply IHe; auto | apply continuous_at_Rpower_const; auto].
   - destruct H as [H1 [H2 H3]]. apply continuous_at_Rpower_comp; auto.
@@ -298,7 +309,7 @@ Qed.
 Lemma derive_correct : forall e x,
   wf_derive e x -> ⟦ der x ⟧ (λ t, eval_expr e t) = (λ t, eval_expr (derive_expr e) t).
 Proof.
-  induction e; simpl; try lra.
+  induction e; cbn -[Rabs]; try lra.
   - intros x _. apply derivative_at_id.
   - intros x _. apply derivative_at_const.
   - intros x [H1 H2]; apply derivative_at_plus; auto.
@@ -385,6 +396,13 @@ Proof.
     + apply IHe. exact H1.
     + apply derivative_log_x. exact H2.
   - intros x [H1 H2].
+    replace (λ t : ℝ, Rabs (eval_expr e t)) with ((Rabs) ∘ (λ t:ℝ, eval_expr e t))%function by reflexivity.
+    replace (λ t : ℝ, eval_expr e t / Rabs (eval_expr e t) * eval_expr (derive_expr e) t) with (((fun y : R => (y / Rabs y)%R) ∘ (λ t : ℝ, eval_expr e t)) ⋅ (λ t, eval_expr (derive_expr e) t))%function.
+    2: { extensionality t. unfold compose, Rdiv. simpl. lra. }
+    apply derivative_at_comp with (g := Rabs) (g' := fun y => y / Rabs y).
+    + apply IHe. exact H1.
+    + apply derivative_at_Rabs. exact H2.
+  - intros x [H1 H2].
     replace (λ t : ℝ, eval_expr e t ^^ r) with ((λ y, y ^^ r) ∘ (λ t:ℝ, eval_expr e t))%function by reflexivity.
     replace (λ t : ℝ, r * eval_expr e t ^^ (r - 1) * eval_expr (derive_expr e) t) with (((fun y : R => (r * y ^^ (r - 1))%R) ∘ (λ t : ℝ, eval_expr e t)) ⋅ (λ t, eval_expr (derive_expr e) t))%function.
     2: { extensionality t. unfold compose. lra. }
@@ -452,6 +470,7 @@ Ltac reify_expr x t :=
       | exp ?u  => let e := reify_expr x u in constr:(EExp e)
       | log ?u  => let e := reify_expr x u in constr:(ELog e)
       | ln ?u   => let e := reify_expr x u in constr:(ELog e)
+      | Rabs ?u => let e := reify_expr x u in constr:(ERabs e)
       | ?u ^^ ?v => 
           let b := match v with | context[x] => constr:(true) | _ => constr:(false) end in
           lazymatch b with
@@ -801,9 +820,14 @@ Proof.
   auto_cont.
 Qed.
 
-Lemma test_auto_cont_rabs : continuous (λ x, Rabs (x^2 + 1)).
+Lemma test_auto_cont_rabs : continuous (λ x, |x^2 + 1|).
 Proof.
   auto_cont.
+Qed.
+
+Lemma test_auto_diff_rabs : ⟦ der ⟧ (fun x => |x^2 + 1|) (1, 2) = (fun x => (x^2 + 1) / |x^2 + 1| * (2 * x * 1 + 0)).
+Proof.
+  auto_diff.
 Qed.
 
 End Tactic_Tests.
