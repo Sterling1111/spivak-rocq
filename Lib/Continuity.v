@@ -191,6 +191,12 @@ Lemma continuous_id :
   continuous (fun x => x).
 Proof. intros a. unfold continuous_at. apply limit_id. Qed.
 
+Lemma continuous_at_Rabs : forall a, continuous_at Rabs a.
+Proof.
+  intros a ε H1. exists ε. split; [exact H1|].
+  intros x H2. solve_R.
+Qed.
+
 Lemma continuous_at_neg : forall f a,
   continuous_at f a -> continuous_at (-f) a.
 Proof.
@@ -1251,26 +1257,21 @@ Proof.
 Qed.
 
 Theorem intermediate_value_theorem_unordered : forall f a b c,
-  continuous f -> c ∈ [Rmin (f a) (f b), Rmax (f a) (f b)] -> exists x, x ∈ [Rmin a b, Rmax a b] /\ f x = c.
+  continuous_on f [Rmin a b, Rmax a b] ->
+  c ∈ [Rmin (f a) (f b), Rmax (f a) (f b)] ->
+  exists x, x ∈ [Rmin a b, Rmax a b] /\ f x = c.
 Proof.
   intros f a b c H1 H2.
-  destruct (Rle_dec a b) as [H3 | H3]; destruct (Rle_dec (f a) (f b)) as [H4 | H4].
-  - destruct (Req_dec_T a b) as [H5 | H5].
-    + subst b. exists a. solve_R.
-    + destruct (intermediate_value_theorem f a b c ltac:(lra) (continuous_imp_continuous_on f [a, b] H1) ltac:(solve_R)) as [x H7].
-      exists x. solve_R.
-  - destruct (Req_dec_T a b) as [H5 | H5].
-    + subst b. exists a. solve_R.
-    + destruct (intermediate_value_theorem_decreasing f a b c ltac:(lra) (continuous_imp_continuous_on f [a, b] H1) ltac:(solve_R)) as [x H7].
-      exists x. solve_R.
-  - destruct (Req_dec_T a b) as [H5 | H5].
-    + subst b. exists a; solve_R.
-    + destruct (intermediate_value_theorem_decreasing f b a c ltac:(lra) (continuous_imp_continuous_on f [b, a] H1) ltac:(solve_R)) as [x H7].
-      exists x. solve_R.
-  - destruct (Req_dec_T a b) as [H5 | H5].
-    + subst b. exists a. solve_R.
-    + destruct (intermediate_value_theorem f b a c ltac:(lra) (continuous_imp_continuous_on f [b, a] H1) ltac:(solve_R)) as [x H7].
-      exists x. solve_R.
+  destruct (Rle_dec a b) as [H3 | H3]; destruct (Rle_dec (f a) (f b)) as [H4 | H4]; 
+  destruct (Req_dec_T a b) as [H5 | H5]; try (subst b; exists a; solve_R).
+  - assert (H6 : continuous_on f [a, b]) by (eapply continuous_on_subset; eauto; intros z H6; solve_R).
+    destruct (intermediate_value_theorem f a b c ltac:(lra) H6 ltac:(solve_R)) as [x H7]; exists x; solve_R.
+  - assert (H6 : continuous_on f [a, b]) by (eapply continuous_on_subset; eauto; intros z H6; solve_R).
+    destruct (intermediate_value_theorem_decreasing f a b c ltac:(lra) H6 ltac:(solve_R)) as [x H7]; exists x; solve_R.
+  - assert (H6 : continuous_on f [b, a]) by (eapply continuous_on_subset; eauto; intros z H6; solve_R).
+    destruct (intermediate_value_theorem_decreasing f b a c ltac:(lra) H6 ltac:(solve_R)) as [x H7]; exists x; solve_R.
+  - assert (H6 : continuous_on f [b, a]) by (eapply continuous_on_subset; eauto; intros z H6; solve_R).
+    destruct (intermediate_value_theorem f b a c ltac:(lra) H6 ltac:(solve_R)) as [x H7]; exists x; solve_R.
 Qed.
 
 Theorem continuous_on_interval_bounded_below_ge : forall f a b,

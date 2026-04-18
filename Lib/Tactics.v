@@ -563,6 +563,7 @@ Ltac diff_simplify :=
   try solve_denoms.
 
 Hint Resolve derivative_Rpower_base : core.
+Hint Resolve continuous_at_Rabs : core.
 
 Ltac auto_limit :=
   intros;
@@ -714,6 +715,11 @@ Proof.
 Qed.
 
 Lemma test_auto_cont_2 : continuous_on (λ x: ℝ, 1/x) (0, 1).
+Proof.
+  auto_cont.
+Qed.
+
+Lemma test_auto_cont_rabs : continuous (λ x, Rabs (x^2 + 1)).
 Proof.
   auto_cont.
 Qed.

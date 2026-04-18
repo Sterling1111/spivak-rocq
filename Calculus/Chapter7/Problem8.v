@@ -1,6 +1,6 @@
 From Calculus.Chapter7 Require Import Prelude.
 
-Lemma exercise_7_8 : forall f g,
+Lemma lemma_7_8 : forall f g,
   continuous f ->
   continuous g ->
   (f^2 = g^2)%function ->
@@ -34,16 +34,19 @@ Proof.
     apply Rnot_lt_ge in H13 as [H13 | H13]; 
     try solve [ apply (H4 z); auto | apply (H4 w); auto].
 
-    pose proof intermediate_value_theorem_unordered f z w 0 H1 ltac:(solve_R) as [v [H14 H15]].
+    pose proof intermediate_value_theorem_unordered f z w 0
+      ltac:(eapply continuous_imp_continuous_on; eauto) ltac:(solve_R) as [v [H14 H15]].
     apply (H4 v); auto.
   }
 
   - assert (H13 : g x < 0) by (pose proof (H12 x); lra).
     assert (H14 : g y > 0) by (pose proof (H12 y); lra).
-    destruct (intermediate_value_theorem_unordered g x y 0 H2 ltac:(solve_R)) as [c [_ H16]].
+    destruct (intermediate_value_theorem_unordered g x y 0 
+      ltac:(eapply continuous_imp_continuous_on; eauto) ltac:(solve_R)) as [c [_ H16]].
     specialize (H9 c). apply (H4 c); lra.
   - assert (H13 : g x > 0) by (pose proof (H12 x); lra).
     assert (H14 : g y < 0) by (pose proof (H12 y); lra).
-    destruct (intermediate_value_theorem_unordered g x y 0 H2 ltac:(solve_R)) as [c [_ H16]].
+    destruct (intermediate_value_theorem_unordered g x y 0 
+      ltac:(eapply continuous_imp_continuous_on; eauto) ltac:(solve_R)) as [c [_ H16]].
     specialize (H9 c). apply (H4 c); lra.
 Qed.
