@@ -1,0 +1,140 @@
+
+let read_lines file =
+  let ic = open_in file in
+  let rec read_acc acc =
+    try
+      let line = input_line ic in
+      read_acc (line :: acc)
+    with End_of_file ->
+      close_in ic;
+      List.rev acc
+  in
+  read_acc []
+
+let locate_construct name =
+  match Nametab.locate (Libnames.qualid_of_string name) with
+  | Names.GlobRef.ConstructRef c -> c
+  | _ -> failwith ("Not a construct: " ^ name)
+
+let mk_construct name = EConstr.UnsafeMonomorphic.mkConstruct (locate_construct name)
+let mk_App name args = EConstr.mkApp (mk_construct name, Array.of_list args)
+
+let rec parse_prefix lines =
+  match !lines with
+  | [] -> failwith "Unexpected end of output"
+  | token :: rest ->
+      lines := rest;
+      match token with
+      | "EVar" -> mk_construct "EVar"
+      | "EConst" ->
+          let v = List.hd !lines in
+          lines := List.tl !lines;
+          (* We assume v is an integer for simplicity, or we build a float? 
+             Wait, Coq's R has no native float. We can construct it as an integer using IZR *)
+          let n = int_of_string v in
+          let z = if n >= 0 then 
+                    if n = 0 then mk_construct "Z0"
+                    else mk_App "Zpos" [Simplex_main.mk_pos n]
+                  else mk_App "Zneg" [Simplex_main.mk_pos (-n)] in
+          let r = mk_App "IZR" [z] in
+          mk_App "EConst" [r]
+      | "ENeg" -> mk_App "ENeg" [parse_prefix lines]
+      | "EAdd" -> mk_App "EAdd" [parse_prefix lines; parse_prefix lines]
+      | "ESub" -> mk_App "ESub" [parse_prefix lines; parse_prefix lines]
+      | "EMul" -> mk_App "EMul" [parse_prefix lines; parse_prefix lines]
+      | "EDiv" -> mk_App "EDiv" [parse_prefix lines; parse_prefix lines]
+      | "ESin" -> mk_App "ESin" [parse_prefix lines]
+      | "ECos" -> mk_App "ECos" [parse_prefix lines]
+      | "ETan" -> mk_App "ETan" [parse_prefix lines]
+      | "ECot" -> mk_App "ECot" [parse_prefix lines]
+      | "ESec" -> mk_App "ESec" [parse_prefix lines]
+      | "ECsc" -> mk_App "ECsc" [parse_prefix lines]
+      | "EExp" -> mk_App "EExp" [parse_prefix lines]
+      | "ELog" -> mk_App "ELog" [parse_prefix lines]
+      | "ESqrt" -> mk_App "ESqrt" [parse_prefix lines]
+      | "EArcsin" -> mk_App "EArcsin" [parse_prefix lines]
+      | "EArccos" -> mk_App "EArccos" [parse_prefix lines]
+      | "EArctan" -> mk_App "EArctan" [parse_prefix lines]
+      | "EPow" ->
+          let base = parse_prefix lines in
+          let n_str = List.hd !lines in
+          lines := List.tl !lines;
+          let n = int_of_string n_str in
+          mk_App "EPow" [base; Simplex_main.mk_nat n]
+      | "ERpow" ->
+          let base = parse_prefix lines in
+          let r_str = List.hd !lines in
+          lines := List.tl !lines;
+          (* We assume r_str is just an integer for now, or fraction p/q *)
+          (try
+            let p_str, q_str = match String.split_on_char '/' r_str with | [p;q] -> p,q | _ -> failwith "" in
+            let p = int_of_string p_str in
+            let q = int_of_string q_str in
+            let zp = if p >= 0 then if p = 0 then mk_construct "Z0" else mk_App "Zpos" [Simplex_main.mk_pos p] else mk_App "Zneg" [Simplex_main.mk_pos (-p)] in
+            let zq = if q >= 0 then if q = 0 then mk_construct "Z0" else mk_App "Zpos" [Simplex_main.mk_pos q] else mk_App "Zneg" [Simplex_main.mk_pos (-q)] in
+            let rp = mk_App "IZR" [zp] in
+            let rq = mk_App "IZR" [zq] in
+            let r = mk_App "Rdiv" [rp; rq] in
+            mk_App "ERpow" [base; r]
+           with _ ->
+            let n = int_of_string r_str in
+            let z = if n >= 0 then if n = 0 then mk_construct "Z0" else mk_App "Zpos" [Simplex_main.mk_pos n] else mk_App "Zneg" [Simplex_main.mk_pos (-n)] in
+            let r = mk_App "IZR" [z] in
+            mk_App "ERpow" [base; r])
+      | "ERpower" -> mk_App "ERpower" [parse_prefix lines; parse_prefix lines]
+      | _ -> failwith ("Unknown AST token: " ^ token)
+
+let rec convert_coq_expr_to_python_string env sigma t =
+  let open EConstr in
+  match kind sigma t with
+  | App (c, args) ->
+      let c_str = Pp.string_of_ppcmds (Printer.pr_econstr_env env sigma c) in
+      let len = Array.length args in
+      (match c_str with
+       | "EAdd" | "@EAdd" -> "(" ^ convert_coq_expr_to_python_string env sigma args.(len - 2) ^ " + " ^ convert_coq_expr_to_python_string env sigma args.(len - 1) ^ ")"
+       | "ESub" | "@ESub" -> "(" ^ convert_coq_expr_to_python_string env sigma args.(len - 2) ^ " - " ^ convert_coq_expr_to_python_string env sigma args.(len - 1) ^ ")"
+       | "EMul" | "@EMul" -> "(" ^ convert_coq_expr_to_python_string env sigma args.(len - 2) ^ " * " ^ convert_coq_expr_to_python_string env sigma args.(len - 1) ^ ")"
+       | "EDiv" | "@EDiv" -> "(" ^ convert_coq_expr_to_python_string env sigma args.(len - 2) ^ " / " ^ convert_coq_expr_to_python_string env sigma args.(len - 1) ^ ")"
+       | "ENeg" | "@ENeg" -> "(- " ^ convert_coq_expr_to_python_string env sigma args.(len - 1) ^ ")"
+       | "ESin" | "@ESin" -> "sin(" ^ convert_coq_expr_to_python_string env sigma args.(len - 1) ^ ")"
+       | "ECos" | "@ECos" -> "cos(" ^ convert_coq_expr_to_python_string env sigma args.(len - 1) ^ ")"
+       | "ETan" | "@ETan" -> "tan(" ^ convert_coq_expr_to_python_string env sigma args.(len - 1) ^ ")"
+       | "ECot" | "@ECot" -> "cot(" ^ convert_coq_expr_to_python_string env sigma args.(len - 1) ^ ")"
+       | "ESec" | "@ESec" -> "sec(" ^ convert_coq_expr_to_python_string env sigma args.(len - 1) ^ ")"
+       | "ECsc" | "@ECsc" -> "csc(" ^ convert_coq_expr_to_python_string env sigma args.(len - 1) ^ ")"
+       | "EExp" | "@EExp" -> "exp(" ^ convert_coq_expr_to_python_string env sigma args.(len - 1) ^ ")"
+       | "ELog" | "@ELog" -> "log(" ^ convert_coq_expr_to_python_string env sigma args.(len - 1) ^ ")"
+       | "ESqrt" | "@ESqrt" -> "sqrt(" ^ convert_coq_expr_to_python_string env sigma args.(len - 1) ^ ")"
+       | "EArcsin" | "@EArcsin" -> "asin(" ^ convert_coq_expr_to_python_string env sigma args.(len - 1) ^ ")"
+       | "EArccos" | "@EArccos" -> "acos(" ^ convert_coq_expr_to_python_string env sigma args.(len - 1) ^ ")"
+       | "EArctan" | "@EArctan" -> "atan(" ^ convert_coq_expr_to_python_string env sigma args.(len - 1) ^ ")"
+       | "EPow" | "@EPow" -> "(" ^ convert_coq_expr_to_python_string env sigma args.(len - 2) ^ " ** " ^ string_of_int (Simplex_main.extract_num env sigma args.(len - 1)) ^ ")"
+       | "ERpow" | "@ERpow" | "ERpower" | "@ERpower" -> "(" ^ convert_coq_expr_to_python_string env sigma args.(len - 2) ^ " ** " ^ convert_coq_expr_to_python_string env sigma args.(len - 1) ^ ")"
+       | "EConst" | "@EConst" -> string_of_int (Simplex_main.extract_num env sigma args.(len - 1))
+       | _ -> failwith ("Unknown App: " ^ c_str))
+  | Construct _ ->
+      let c_str = Pp.string_of_ppcmds (Printer.pr_econstr_env env sigma t) in
+      if c_str = "EVar" then "x" else failwith ("Unknown Construct: " ^ c_str)
+  | _ -> 
+      let s = Pp.string_of_ppcmds (Printer.pr_econstr_env env sigma t) in
+      if s = "EVar" then "x" else failwith ("Unsupported expr node: " ^ s)
+
+let run_auto_int env sigma f_term =
+  let expr_str = convert_coq_expr_to_python_string env sigma f_term in
+  let in_file = Filename.temp_file "auto_int_in_" ".txt" in
+  let out_file = Filename.temp_file "auto_int_out_" ".txt" in
+  
+  let oc = open_out in_file in
+  output_string oc expr_str;
+  close_out oc;
+  
+  let python_exe = 
+    if Sys.file_exists ".auto_int_venv/bin/python3" then ".auto_int_venv/bin/python3"
+    else "python3" 
+  in
+  let cmd = Printf.sprintf "%s auto_int.py %s %s" python_exe in_file out_file in
+  let exit_code = Sys.command cmd in
+  if exit_code <> 0 then failwith (Printf.sprintf "auto_int script failed with code %d" exit_code);
+  
+  let lines = ref (read_lines out_file) in
+  parse_prefix lines

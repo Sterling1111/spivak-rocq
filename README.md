@@ -188,6 +188,13 @@ This project is built and verified using **The Rocq Prover, version 9.1.1** (for
 
 ### Prerequisites
 
+**Python Dependencies (Required for the `auto_int` tactic)**
+The automated integration tactic (`auto_int`) uses a Python script (`auto_int.py`) bridging Coq and the SymPy computer algebra system. You must have Python 3 and SymPy installed to use it:
+```bash
+pip install sympy
+```
+
+**C++ Simplex Solver (Optional)**
 The project will compile successfully even if the C++ simplex program is not built. However, the custom `psatz` tactic for real linear arithmetic will not work without it. Note that this tactic was merely an experiment to implement the ideas from the paper *Fast Reflexive Tactics* and should generally not be used anyway (rely on `lia` or `lra` instead). If you still wish to compile it:
 
 ```bash
