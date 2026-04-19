@@ -6,6 +6,7 @@ Lemma lemma_15_1_i : forall x,
               (1 / (1 + (arctan x)^2)) *
               (1 / (1 + x^2))).
 Proof.
+  intros x.
   auto_diff.
 Qed.
 
@@ -41,18 +42,23 @@ Lemma lemma_15_1_v : forall a b,
   ⟦ der ⟧ (fun x => ∫ a b (fun t => x / (1 + t^2 + (sin t)^2))) =
     (fun x => ∫ a b (fun t => 1 / (1 + t^2 + (sin t)^2))).
 Proof.
+  intros a b H1.
 Abort.
 
 Lemma lemma_15_1_vi : forall x,
   ⟦ der x ⟧ (fun x => sin (∫ 0 x (fun y => sin (∫ 0 y (fun t => (sin t)^3))))) =
     (fun x => cos (∫ 0 x (fun y => sin (∫ 0 y (fun t => (sin t)^3)))) *
               sin (∫ 0 x (fun t => (sin t)^3))).
+Proof.
+  intros x.
 Abort.
 
 Lemma lemma_15_1_vii : forall F F_inv,
   (forall x, x > 0 -> F x = ∫ 1 x (fun t => 1 / t)) ->
   inverse F F_inv ->
   ⟦ der ⟧ F_inv = (fun y => F_inv y).
+Proof.
+  intros F F_inv H1 H2.
 Abort.
 
 Lemma lemma_15_1_viii : forall F F_inv,

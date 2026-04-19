@@ -48,7 +48,28 @@ def to_prefix_lines(expr):
         elif expr.exp == sympy.Rational(-1, 2):
             return ["EDiv", "EConst", "1", "ESqrt"] + base_lines
         elif expr.exp.is_Rational:
-            return ["ERpow"] + base_lines + [f"{expr.exp.p}/{expr.exp.q}"]
+            p, q = expr.exp.p, expr.exp.q
+            if q == 2:
+                n = abs(p) // 2
+                rem = abs(p) % 2
+                if n == 0:
+                    pos_lines = ["ESqrt"] + base_lines
+                elif n == 1:
+                    if rem == 1:
+                        pos_lines = ["EMul"] + base_lines + ["ESqrt"] + base_lines
+                    else:
+                        pos_lines = base_lines
+                else:
+                    if rem == 1:
+                        pos_lines = ["EMul", "EPow"] + base_lines + [str(n), "ESqrt"] + base_lines
+                    else:
+                        pos_lines = ["EPow"] + base_lines + [str(n)]
+                
+                if p < 0:
+                    return ["EDiv", "EConst", "1"] + pos_lines
+                else:
+                    return pos_lines
+            return ["ERpow"] + base_lines + [f"{p}/{q}"]
         else:
             exp_lines = to_prefix_lines(expr.exp)
             return ["ERpower"] + base_lines + exp_lines

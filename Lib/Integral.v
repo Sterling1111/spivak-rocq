@@ -2519,6 +2519,24 @@ Proof.
   lra.
 Qed.
 
+Theorem FTC2_open : ∀ a b f g,
+    a < b -> continuous_on f [a, b] -> continuous_on g [a, b] -> ⟦ der ⟧ g (a, b) = f -> ∫ a b f = g b - g a.
+Proof.
+  intros a b f g H1 H2 H3 H4.
+  (set (F := fun x => ∫ a x f)).
+  pose proof (FTC1 f a b H1 H2) as H5.
+  assert (H5_open : ⟦ der ⟧ F (a, b) = f).
+  { apply derivative_on_subset with (D1 := [a, b]); auto. apply differentiable_domain_open; lra. intro x; intro Hx; auto_interval. }
+  assert (H_F_cont : continuous_on F [a, b]).
+  { apply differentiable_on_imp_continuous_on. apply derivative_on_imp_differentiable_on with (f' := f); auto. }
+  assert (exists c, forall x, x ∈ [a, b] -> F x = g x + c) as [c H6] by (apply corollary_11_2_open with (f' := f) (g' := f); auto).
+  assert (H7 : F a = 0) by (apply integral_eq; reflexivity).
+  specialize (H6 a ltac:(solve_R)) as H8.
+  specialize (H6 b ltac:(solve_R)) as H9.
+  unfold F in H6, H7, H8, H9.
+  lra.
+Qed.
+
 Example FTC2_test : ∫ 0 1 (λ x : ℝ, 2 * x) = 1.
 Proof.
   set (f := λ x : ℝ, 2 * x).

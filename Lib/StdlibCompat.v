@@ -1,4 +1,4 @@
-From Lib Require Import Imports Tactics Limit Derivative Integral Continuity Reals_util Trigonometry Sets Interval Exponential Sequence Series Sums.
+From Lib Require Import Imports Limit Derivative Integral Continuity Reals_util Trigonometry Sets Interval Exponential Sequence Series Sums.
 Import LimitNotations DerivativeNotations SetNotations IntervalNotations SequenceNotations SeriesNotations SumNotations.
 
 Open Scope R_scope.
@@ -245,7 +245,29 @@ Proof.
   pose proof Rtrigo_der_sin as H1.
   pose proof Rtrigo_der_cos as H2.
   unfold trig_diff.
-  auto_diff.
+  eapply derivative_ext.
+  2: {
+    eapply derivative_plus.
+    - simpl. eapply derivative_mult.
+      + eapply derivative_minus.
+        * apply derivative_cos.
+        * exact H2.
+      + eapply derivative_mult.
+        * eapply derivative_minus.
+          -- apply derivative_cos.
+          -- exact H2.
+        * apply derivative_const.
+    - simpl. eapply derivative_mult.
+      + eapply derivative_minus.
+        * apply derivative_sin.
+        * exact H1.
+      + eapply derivative_mult.
+        * eapply derivative_minus.
+          -- apply derivative_sin.
+          -- exact H1.
+        * apply derivative_const.
+  }
+  intros x. lra.
 Qed.
 
 Lemma trig_diff_0 : trig_diff 0 = 0.
@@ -320,7 +342,20 @@ Lemma exp_diff_der_0 : ⟦ der ⟧ (fun x => exp x * Rtrigo_def.exp (-x)) = (fun
 Proof.
   pose proof Rtrigo_der_exp as H1.
   pose proof theorem_18_2 as H2.
-  auto_diff.
+  assert (H_eq : (λ x : R, exp x * Rtrigo_def.exp (- x)) = (λ x : R, exp x * Rtrigo_def.exp (0 - x))).
+  { apply functional_extensionality. intro. f_equal. f_equal. lra. }
+  rewrite H_eq.
+  eapply derivative_ext.
+  2: {
+    eapply derivative_mult.
+    - apply derivative_exp.
+    - eapply derivative_comp with (f := fun x => 0 - x).
+      + eapply derivative_minus.
+        * apply derivative_const.
+        * apply derivative_id.
+      + exact H1.
+  }
+  intros x. simpl. unfold "∘". lra.
 Qed.
 
 Lemma exp_diff_const : forall x, Exponential.exp x * Rtrigo_def.exp (-x) = 1.
@@ -398,7 +433,7 @@ Proof.
       rewrite cos_PI2 in H3. lra.
     - destruct (Rlt_or_le (π / 2) (PI / 2)) as [H3 | H3].
       + exfalso.
-        pose proof (cos_gt_0 (π / 2)) as H4.
+        pose proof (Rtrigo1.cos_gt_0 (π / 2)) as H4.
         assert (- (PI / 2) < π / 2 < PI / 2) as H5.
         { pose proof π_pos as H6. split; lra. }
         specialize (H4 (proj1 H5) (proj2 H5)).

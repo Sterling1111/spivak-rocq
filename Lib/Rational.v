@@ -46,6 +46,56 @@ Proof.
     repeat rewrite mult_IZR. field; split; apply not_0_IZR; lia.
 Qed.
 
+Lemma inv_rational : forall a,
+  rational a -> rational (/ a).
+Proof.
+  intros a [z1 [z2 H1]].
+  exists z2, z1.
+  unfold Rdiv. rewrite <- Rdiv_1_l, H1.
+  assert (z1 = 0 \/ z2 = 0 \/ z1 <> 0 /\ z2 <> 0) as [H2 | [H2 | [H2 H3]]] by lia.
+  - subst. rewrite Rdiv_0_l, Rdiv_0_r, Rinv_0. solve_R.
+  - subst. repeat rewrite Rdiv_0_r. rewrite Rmult_0_l. reflexivity.
+  - solve_R; split; apply not_0_IZR; auto.
+Qed.
+
+Lemma div_rational : forall a b,
+  rational a -> rational b -> rational (a / b).
+Proof.
+  intros a b H1 H2. unfold Rdiv.
+  apply mult_rational; auto. apply inv_rational; auto.
+Qed.
+
+Lemma IZR_rational : forall z : Z, rational (IZR z).
+Proof.
+  intros z. unfold rational. exists z, 1%Z. 
+  unfold Rdiv. rewrite Rinv_1, Rmult_1_r. reflexivity.
+Qed.
+
+Lemma neg_rational : forall a, rational a -> rational (- a).
+Proof.
+  intros a [z1 [z2 Ha]].
+  exists (-z1)%Z, z2.
+  rewrite opp_IZR.
+  rewrite Ha.
+  lra.
+Qed.
+
+Lemma minus_rational : forall a b, rational a -> rational b -> rational (a - b).
+Proof.
+  intros a b Ha Hb.
+  replace (a - b)%R with (a + - b)%R by lra.
+  apply plus_rational.
+  - exact Ha.
+  - apply neg_rational. exact Hb.
+Qed.
+
+Create HintDb rat_db.
+
+Hint Resolve IZR_rational plus_rational mult_rational div_rational neg_rational minus_rational inv_rational : rat_db.
+
+Ltac assert_rational expr name :=
+  assert (name : rational expr) by auto with rat_db.
+
 Lemma gcd_gt_0 : forall a b : Z, a <> 0 -> b <> 0 -> Z.gcd a b > 0.
 Proof.
   intros a b H1 H2. pose proof Z.gcd_nonneg a b. assert (Z.gcd a b = 0 \/ Z.gcd a b > 0) as [H3 | H3] by lia.

@@ -1,14 +1,6 @@
 From Lib Require Import Imports Sets Notations Functions Limit Continuity Reals_util Sums Interval.
 Import SetNotations SumNotations IntervalNotations FunctionNotations LimitNotations.
 
-Definition convex_on (f : R -> R) (D : Ensemble R) :=
-  forall a x b, a ∈ D -> x ∈ D -> b ∈ D -> a < x < b ->
-    (f x - f a) / (x - a) < (f b - f a) / (b - a).
-
-Definition weakly_convex_on (f : R -> R) (D : Ensemble R) :=
-  forall a x b, a ∈ D -> x ∈ D -> b ∈ D -> a < x < b ->
-    (f x - f a) / (x - a) <= (f b - f a) / (b - a).
-
 Definition differentiable_at (f:R -> R) (a:R) :=
   exists L, ⟦ lim 0 ⟧ (fun h => (f (a + h) - f a) / h) = L.
 
@@ -2344,6 +2336,54 @@ Proof.
   apply corollary_11_2 with (f' := f') (g' := g'); auto.
   - apply derivative_at_imp_derivative_on; auto. apply differentiable_domain_closed; auto.
   - apply derivative_at_imp_derivative_on; auto. apply differentiable_domain_closed; auto.
+Qed.
+
+Corollary derivative_zero_imp_const_open : forall f a b, 
+  a < b -> continuous_on f [a, b] -> ⟦ der ⟧ f (a, b) = (λ _, 0) -> exists c, forall x, x ∈ [a, b] -> f x = c.
+Proof.
+  intros f a b H1 H2 H3. exists (f a). intros x H4. pose proof classic (x = a) as [H5 | H5]; subst; auto. assert (a < x) as H6. { solve_R. }
+  assert (H7 : continuous_on f [a, x]). { apply continuous_on_subset_closed with (a := a) (b := b); auto. solve_R. }
+  assert (H8 : differentiable_on f (a, x)). 
+  { apply derivative_on_imp_differentiable_on with (f' := fun _ => 0). apply derivative_on_subset_open with (a := a) (b := b); auto. solve_R. }
+  pose proof mean_value_theorem f a x H6 H7 H8 as [d [H9 H10]].
+  assert (H11 : ⟦ der d ⟧ f = fun _ => 0).
+  { apply derivative_on_imp_derivative_at with (D := (a, b)); auto_interval. }
+  apply derivative_at_unique with (f1' := fun _ => 0) in H10; auto.
+  apply Rmult_eq_compat_r with (r := x - a) in H10. field_simplify in H10; lra.
+Qed.
+
+Corollary corollary_11_2_open : forall f f' g g' a b, 
+  a < b -> 
+  continuous_on f [a, b] -> 
+  continuous_on g [a, b] -> 
+  ⟦ der ⟧ f (a, b) = f' -> 
+  ⟦ der ⟧ g (a, b) = g' -> 
+  (forall x, x ∈ (a, b) -> f' x = g' x) -> 
+  exists c, forall x, x ∈ [a, b] -> f x = g x + c.
+Proof.
+  intros f f' g g' a b H1 H2 H3 H4 H5 H6. set (h := fun x => f x - g x). 
+  assert (H7 : continuous_on h [a, b]). { apply continuous_on_minus; auto. }
+  assert (H8 : ⟦ der ⟧ h (a, b) = (λ x, f' x - g' x)).
+  { apply derivative_on_minus; auto. apply differentiable_domain_open; auto. }
+  assert (H9 : ⟦ der ⟧ h (a, b) = (λ _, 0)).
+  { apply derivative_on_ext with (f1' := (f' - g')%function); auto. intros x H9. specialize (H6 x H9). lra. }
+  apply derivative_zero_imp_const_open in H9 as [c H10]; auto.
+  exists c. intros x H11. specialize (H10 x H11). unfold h in H10. lra.
+Qed.
+
+Corollary derivative_at_eq_imp_diff_const_open : forall f f' g g' a b,
+  a < b ->
+  continuous_on f [a, b] ->
+  continuous_on g [a, b] ->
+  (forall x, x ∈ (a, b) -> ⟦ der x ⟧ f = f') ->
+  (forall x, x ∈ (a, b) -> ⟦ der x ⟧ g = g') ->
+  (forall x, x ∈ (a, b) -> f' x = g' x) ->
+  exists c, forall x, x ∈ [a, b] -> f x = g x + c.
+Proof.
+  intros f f' g g' a b H1 H2 H3 H4 H5 H6.
+  apply corollary_11_2_open with (f' := f') (g' := g'); auto.
+  - apply derivative_at_imp_derivative_on; auto. apply differentiable_domain_open; auto.
+  - apply derivative_at_imp_derivative_on; auto. apply differentiable_domain_open; auto.
 Qed.
 
 Lemma minimum_point_neg : forall f A x,
@@ -6480,3 +6520,11 @@ Proof.
     + exists (-x). split; solve_R.
     + replace (x / |x|) with (-1) by solve_R. apply limit_const.
 Qed.
+
+Definition convex_on (f : R -> R) (D : Ensemble R) :=
+  forall a x b, a ∈ D -> x ∈ D -> b ∈ D -> a < x < b ->
+    (f x - f a) / (x - a) < (f b - f a) / (b - a).
+
+Definition weakly_convex_on (f : R -> R) (D : Ensemble R) :=
+  forall a x b, a ∈ D -> x ∈ D -> b ∈ D -> a < x < b ->
+    (f x - f a) / (x - a) <= (f b - f a) / (b - a).

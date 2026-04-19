@@ -496,12 +496,10 @@ Lemma integral_33_minus : forall a c,
 a > 0 -> 
 ∫ (λ x, 1 / √(x ^ 2 - a ^ 2)) (a, ∞) = (λ x, ln (x + √(x ^ 2 - a ^ 2)) + c).
 Proof.
-  auto_int.
-  - assert (H1 : x ^ 2 > a^2) by (simpl; solve_R).
-    pose proof sqrt_lt_R0 (x * (x * 1) - a * (a * 1)) ltac:(solve_R); solve_R.
-  - assert (H1 : x ^ 2 > a^2) by (simpl; solve_R). 
-    pose proof sqrt_lt_R0 (x * (x * 1) - a * (a * 1)) ltac:(solve_R); solve_R.
-    repeat rewrite Rmult_1_r in H2. solve_R.
+  auto_int. all :
+  assert (H1 : x ^ 2 > a^2) by (simpl; solve_R); 
+  pose proof sqrt_lt_R0 (x * (x * 1) - a * (a * 1)) ltac:(solve_R); solve_R;
+  repeat rewrite Rmult_1_r in H2; solve_R.
 Qed.
 
 Lemma integral_34 : forall a c, 
@@ -779,36 +777,28 @@ Qed.
 Lemma integral_70 : forall c, 
 ∫ (λ x, tan x) (0, π / 2) = (λ x, - ln (cos x) + c).
 Proof.
-  auto_int.
-  - pose proof π_pos; lra.
-  - apply cos_gt_0_on_open_pi_2; solve_R.
-  - unfold tan. lra.
+  auto_int; unfold tan; lra.
 Qed.
 
 Lemma integral_71 : forall c, 
 ∫ (λ x, (tan x) ^ 2) (0, π / 2) = (λ x, - x + tan x + c).
 Proof.
   auto_int.
-  - pose proof π_pos; lra.
-  - pose proof cos_gt_0_on_open_pi_2 x; solve_R.
-  - unfold tan. pose proof pythagorean_identity x. solve_R.
-    pose proof cos_gt_0_on_open_pi_2 x; solve_R.
+  unfold tan. pose proof pythagorean_identity x. solve_denoms.
 Qed.
 
 Lemma integral_72 : forall c, 
 ∫ (λ x, (tan x) ^ 3) (0, π / 2) = (λ x, ln (cos x) + 1 / 2 * (sec x) ^ 2 + c).
 Proof.
-  auto_int. 2, 3 : pose proof cos_gt_0_on_open_pi_2 x; solve_R.
-  - pose proof π_pos; lra.  
-  - unfold sec, tan. pose proof cos_gt_0_on_open_pi_2 x; field_simplify; try solve [solve_R].
-    pose proof pythagorean_identity x. replace (cos x ^ 2) with (1 - (sin x)^2); solve_R.
+  auto_int. 
+  unfold sec, tan. pose proof cos_gt_0_on_open_pi_2 x; field_simplify; try solve [solve_R].
+  pose proof pythagorean_identity x. replace (cos x ^ 2) with (1 - (sin x)^2); solve_R.
 Qed.
 
 Lemma integral_73 : forall c, 
 ∫ (λ x, sec x) (0, π / 2) = (λ x, ln (sec x + tan x) + c).
 Proof.
-  auto_int. 2, 3 : pose proof cos_gt_0_on_open_pi_2 x; solve_R.
-  - pose proof π_pos; lra.
+  auto_int.
   - unfold sec, tan. pose proof cos_gt_0_on_open_pi_2 x. 
     pose proof sin_bounds x. pose proof pythagorean_identity x. solve_R.
     assert (H3 : cos x > 0) by (apply H0; exact H).
@@ -821,16 +811,14 @@ Qed.
 Lemma integral_74 : forall c, 
 ∫ (λ x, (sec x) ^ 2) (0, π / 2) = (λ x, tan x + c).
 Proof.
-  auto_int. 2 : pose proof cos_gt_0_on_open_pi_2 x; solve_R.
-  - pose proof π_pos; lra.
-  - unfold sec. pose proof cos_gt_0_on_open_pi_2 x. field; solve_R.
+  auto_int.
+  unfold sec. pose proof cos_gt_0_on_open_pi_2 x. field; solve_R.
 Qed.
 
 Lemma integral_75 : forall c, 
 ∫ (λ x, (sec x) ^ 3) (0, π / 2) = (λ x, 1 / 2 * sec x * tan x + 1 / 2 * ln (sec x + tan x) + c).
 Proof.
-  auto_int. 2, 3, 4, 5 : pose proof cos_gt_0_on_open_pi_2 x; solve_R.
-  - pose proof π_pos; lra.
+  auto_int.
   - unfold sec, tan. pose proof cos_gt_0_on_open_pi_2 x as H1. pose proof sin_bounds x as H2.
     pose proof pythagorean_identity x as H3. solve_R.
     assert (H4 : cos x > 0) by (apply H1; exact H).
@@ -844,16 +832,12 @@ Lemma integral_76 : forall c,
 ∫ (λ x, sec x * tan x) (0, π / 2) = (λ x, sec x + c).
 Proof.
   auto_int.
-  - pose proof π_pos; lra.
-  - pose proof cos_gt_0_on_open_pi_2 x. solve_R.
 Qed.
 
 Lemma integral_77 : forall c, 
 ∫ (λ x, (sec x) ^ 2 * tan x) (0, π / 2) = (λ x, 1 / 2 * (sec x) ^ 2 + c).
 Proof.
   auto_int.
-  - pose proof π_pos; lra.
-  - pose proof cos_gt_0_on_open_pi_2 x. solve_R.
 Qed.
 
 Lemma integral_78 : forall n c, 
@@ -861,9 +845,6 @@ n <> 0 ->
 ∫ (λ x, (sec x) ^^ n * tan x) (0, π / 2) = (λ x, 1 / n * (sec x) ^^ n + c).
 Proof.
   auto_int.
-  - pose proof π_pos; lra.
-  - pose proof cos_gt_0_on_open_pi_2 x. solve_R.
-  - unfold sec. pose proof cos_gt_0_on_open_pi_2 x. apply Rdiv_pos_pos; solve_R.
   - unfold sec, tan. pose proof cos_gt_0_on_open_pi_2 x.
     pose proof sin_bounds x. pose proof pythagorean_identity x. solve_R.
     assert (H4 : cos x > 0) by (apply H1; exact H0).
@@ -878,7 +859,6 @@ Lemma integral_79 : forall c,
 ∫ (λ x, csc x) (0, π / 2) = (λ x, ln (csc x - cot x) + c).
 Proof.
   auto_int.
-  - pose proof π_pos; lra.
   - unfold csc, cot, tan.
     assert (H1 : sin x > 0) by (apply sin_gt_0; pose proof π_pos; solve_R).
     pose proof pythagorean_identity x. pose proof cos_bounds x.
@@ -896,14 +876,13 @@ Qed.
 Lemma integral_80 : forall c, 
 ∫ (λ x, (csc x) ^ 2) (0, π / 2) = (λ x, - cot x + c).
 Proof.
-  auto_int. pose proof π_pos; lra.
+  auto_int.
 Qed.
 
 Lemma integral_81 : forall c, 
 ∫ (λ x, (csc x) ^ 3) (0, π / 2) = (λ x, -1 / 2 * cot x * csc x + 1 / 2 * ln (csc x - cot x) + c).
 Proof.
   auto_int.
-  - pose proof π_pos; lra.
   - unfold csc, cot, tan.
     assert (H1 : sin x > 0) by (apply sin_gt_0; pose proof π_pos; solve_R).
     pose proof cos_bounds x. pose proof pythagorean_identity x.
@@ -937,8 +916,8 @@ Abort.
 Lemma integral_83 : forall c, 
 ∫ (λ x, sec x * csc x) (0, π / 2) = (λ x, ln (tan x) + c).
 Proof.
-  auto_int.
-Abort.
+  auto_int. unfold sec, csc, tan. solve_R. split; solve_denoms.
+Qed.
 
 Lemma integral_84 : forall c, 
 ∫ (λ x, x * cos x) = (λ x, cos x + x * sin x + c).

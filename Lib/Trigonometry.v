@@ -3702,6 +3702,60 @@ Proof.
     apply cos_gt_0_on_open_pi_2. lra.
 Qed.
 
+Lemma cos_gt_0 : forall x, - (π / 2) < x < π / 2 -> cos x > 0.
+Proof.
+  intros x H.
+  assert (x = 0 \/ 0 < x < π / 2 \/ - (π / 2) < x < 0) as [H1 | [H1 | H1]] by lra.
+  - subst. rewrite cos_0. lra.
+  - apply cos_gt_0_on_open_pi_2. lra.
+  - assert (H2 : 0 < - x < π / 2) by lra.
+    pose proof cos_gt_0_on_open_pi_2 (- x) H2 as H3.
+    rewrite cos_even_odd in H3.
+    lra.
+Qed.
+
+Lemma sin_gt_0 : forall x, 0 < x < π -> sin x > 0.
+Proof.
+  intros x H1.
+  rewrite sin_consistency_on_0_π; try lra.
+  unfold sin_0_π.
+  apply sqrt_lt_R0.
+  assert (H2 : cos_0_π x ∈ [-1, 1]) by (apply cos_0_π_in_range; lra).
+  assert (H3 : cos_0_π x <> 1).
+  { intro H4. pose proof cos_0_π_spec x ltac:(lra) as H5.
+    rewrite H4 in H5. rewrite A_at_1 in H5. lra. }
+  assert (H4 : cos_0_π x <> -1).
+  { intro H5. pose proof cos_0_π_spec x ltac:(lra) as H6.
+    rewrite H5 in H6. rewrite A_at_neg_1 in H6.
+    pose proof π_pos as H7. lra. }
+  destruct H2 as [H5 H6]. nra.
+Qed.
+
+Lemma cos_lt_0 : forall x, π / 2 < x < 3 * π / 2 -> cos x < 0.
+Proof.
+  intros x H.
+  assert (H1 : x = π \/ π / 2 < x < π \/ π < x < 3 * π / 2) by lra.
+  destruct H1 as [H1 | [H1 | H1]].
+  - subst. rewrite cos_π. lra.
+  - assert (H2 : 0 < π - x < π / 2) by lra.
+    pose proof cos_gt_0_on_open_pi_2 (π - x) H2 as H3.
+    rewrite cos_minus, cos_π, sin_π in H3.
+    lra.
+  - assert (H2 : 0 < x - π < π / 2) by lra.
+    pose proof cos_gt_0_on_open_pi_2 (x - π) H2 as H3.
+    rewrite cos_minus, cos_π, sin_π in H3.
+    lra.
+Qed.
+
+Lemma sin_lt_0 : forall x, -π < x < 0 -> sin x < 0.
+Proof.
+  intros x H.
+  assert (H1 : 0 < -x < π) by lra.
+  pose proof sin_gt_0 (-x) H1 as H2.
+  rewrite sin_even_odd in H2.
+  lra.
+Qed.
+
 Lemma cos_arctan_nonneg : forall x,
   0 <= cos (arctan x).
 Proof.
@@ -3805,21 +3859,7 @@ Proof.
     rewrite H5, Rabs_mult in H8. pose proof π_pos as H9. solve_abs.
 Qed.
 
-Lemma sin_gt_0 : forall x, 0 < x < π -> sin x > 0.
-Proof.
-  intros x H1.
-  rewrite sin_consistency_on_0_π; try lra.
-  unfold sin_0_π.
-  apply sqrt_lt_R0.
-  assert (H2 : cos_0_π x ∈ [-1, 1]) by (apply cos_0_π_in_range; lra).
-  assert (H3 : cos_0_π x <> 1).
-  { intro H4. pose proof cos_0_π_spec x ltac:(lra) as H5. rewrite H4 in H5. rewrite A_at_1 in H5. lra. }
-  assert (H4 : cos_0_π x <> -1).
-  { intro H5. pose proof cos_0_π_spec x ltac:(lra) as H6. rewrite H5 in H6. rewrite A_at_neg_1 in H6. pose proof π_pos. lra. }
-  destruct H2 as [H5 H6]. nra.
-Qed.
-
-Lemma arcsin_pos : forall x, 0 < x < 1 -> 0 < arcsin x.
+Lemma arcsin_gt_0 : forall x, 0 < x < 1 -> 0 < arcsin x.
 Proof.
   intros x H1.
   apply Rnot_ge_lt; intro H2.
@@ -3832,4 +3872,368 @@ Proof.
   - rewrite H9, sin_0 in H7. lra.
   - pose proof sin_increasing_on (arcsin x) 0 H6 H8 H9 as H10.
     rewrite H7, sin_0 in H10. lra.
+Qed.
+
+Lemma tan_gt_0 : forall x, 0 < x < π / 2 -> tan x > 0.
+Proof.
+  intros x H1. unfold tan.
+  assert (H2 : 0 < x < π) by lra.
+  pose proof sin_gt_0 x H2 as H3.
+  pose proof cos_gt_0_on_open_pi_2 x H1 as H4.
+  apply Rdiv_pos_pos; lra.
+Qed.
+
+Lemma cot_gt_0 : forall x, 0 < x < π / 2 -> cot x > 0.
+Proof.
+  intros x H1. unfold cot.
+  pose proof tan_gt_0 x H1 as H2.
+  apply Rdiv_pos_pos; lra.
+Qed.
+
+Lemma sec_gt_0 : forall x, - (π / 2) < x < π / 2 -> sec x > 0.
+Proof.
+  intros x H1. unfold sec.
+  pose proof cos_gt_0 x H1 as H2.
+  apply Rdiv_pos_pos; lra.
+Qed.
+
+Lemma csc_gt_0 : forall x, 0 < x < π -> csc x > 0.
+Proof.
+  intros x H1. unfold csc.
+  pose proof sin_gt_0 x H1 as H2.
+  apply Rdiv_pos_pos; lra.
+Qed.
+
+Lemma cos_3_π_over_2 : cos (3 * π / 2) = 0.
+Proof.
+  assert (H1 : 3 * π / 2 = π + π / 2) by lra.
+  rewrite H1.
+  rewrite cos_pi_plus.
+  rewrite cos_pi_2_val.
+  lra.
+Qed.
+
+Lemma tan_π : tan π = 0.
+Proof.
+  unfold tan.
+  rewrite sin_π.
+  rewrite cos_π.
+  lra.
+Qed.
+
+Lemma sin_2π : sin (2 * π) = 0.
+Proof.
+  assert (H1 : 2 * π = 0 + 2 * π) by lra.
+  rewrite H1.
+  rewrite sin_periodic.
+  apply sin_0.
+Qed.
+
+Lemma cos_2π : cos (2 * π) = 1.
+Proof.
+  assert (H1 : 2 * π = 0 + 2 * π) by lra.
+  rewrite H1.
+  rewrite cos_periodic.
+  apply cos_0.
+Qed.
+
+Lemma sec_0 : sec 0 = 1.
+Proof.
+  unfold sec.
+  rewrite cos_0.
+  lra.
+Qed.
+
+Lemma cot_pi_4 : cot (π / 4) = 1.
+Proof.
+  unfold cot.
+  rewrite tan_pi_4.
+  lra.
+Qed.
+
+Lemma sin_5_pi_6 : sin (5 * π / 6) = 1 / 2.
+Proof.
+  assert (H1 : 5 * π / 6 = π - π / 6) by lra.
+  rewrite H1.
+  rewrite sin_minus.
+  rewrite sin_π, cos_π.
+  rewrite sin_pi_6.
+  lra.
+Qed.
+
+Lemma cos_2_pi_3 : cos (2 * π / 3) = - 1 / 2.
+Proof.
+  assert (H1 : 2 * π / 3 = π - π / 3) by lra.
+  rewrite H1.
+  rewrite cos_minus.
+  rewrite sin_π, cos_π.
+  rewrite cos_pi_3.
+  lra.
+Qed.
+
+Lemma arccos_gt_0 : forall x, -1 <= x < 1 -> 0 < arccos x.
+Proof.
+  intros x H1.
+  pose proof arccos_spec as [_ [H2 [_ H3]]].
+  assert (H4 : x ∈ [-1, 1]) by solve_R.
+  assert (H5 : arccos x ∈ [0, π]) by (apply H2; solve_R).
+  destruct H5 as [H5 H6].
+  assert (arccos x = 0 \/ 0 < arccos x) as [H7 | H7] by lra.
+  - assert (H8 : cos (arccos x) = x) by (apply H3; solve_R).
+    rewrite H7, cos_0 in H8. lra.
+  - exact H7.
+Qed.
+
+Lemma arctan_gt_0 : forall x, 0 < x -> 0 < arctan x.
+Proof.
+  intros x H1.
+  apply Rnot_ge_lt; intro H2.
+  pose proof arctan_spec as [_ [H3 [_ H4]]].
+  assert (H5 : arctan x ∈ (-(π/2), π/2)) by (apply H3; apply Full_intro).
+  assert (H6 : tan (arctan x) = x) by (apply H4; apply Full_intro).
+  assert (H7 : 0 ∈ (-(π/2), π/2)) by (pose proof π_pos; solve_R).
+  assert (arctan x = 0 \/ arctan x < 0) as [H8 | H8] by lra.
+  - rewrite H8, tan_0 in H6. lra.
+  - pose proof tan_increasing_on (arctan x) 0 H5 H7 H8 as H9.
+    rewrite H6, tan_0 in H9. lra.
+Qed.
+
+Lemma csc_pi_2 : csc (π / 2) = 1.
+Proof.
+  unfold csc. rewrite sin_pi_2. lra.
+Qed.
+
+Lemma cot_pi_2 : cot (π / 2) = 0.
+Proof.
+  unfold cot, tan.
+  rewrite cos_pi_2_val.
+  repeat rewrite Rdiv_0_r.
+  lra.
+Qed.
+
+Lemma csc_pi_6 : csc (π / 6) = 2.
+Proof.
+  unfold csc. rewrite sin_pi_6. lra.
+Qed.
+
+Lemma sec_pi_6 : sec (π / 6) = 2 * √(3) / 3.
+Proof.
+  unfold sec. rewrite cos_pi_6.
+  assert (H1 : √(3) * √(3) = 3) by (apply sqrt_def; lra).
+  assert (H2 : √(3) <> 0) by (pose proof (sqrt_lt_R0 3); lra).
+  apply Rmult_eq_reg_r with (r := √(3)); try lra.
+  replace (1 / (√(3) / 2) * √(3)) with 2 by (field; lra).
+  replace (2 * √(3) / 3 * √(3)) with 2 by (replace (2 * √(3) / 3 * √(3)) with (2 * (√(3) * √(3)) / 3) by lra; rewrite H1; lra).
+  reflexivity.
+Qed.
+
+Lemma cot_pi_6 : cot (π / 6) = √(3).
+Proof.
+  unfold cot. rewrite tan_pi_6.
+  assert (H1 : √(3) * √(3) = 3) by (apply sqrt_def; lra).
+  assert (H2 : √(3) <> 0) by (pose proof (sqrt_lt_R0 3); lra).
+  apply Rmult_eq_reg_r with (r := √(3)); try lra.
+  replace (1 / (√(3) / 3) * √(3)) with 3 by (field; lra).
+  rewrite H1. lra.
+Qed.
+
+Lemma csc_pi_4 : csc (π / 4) = √(2).
+Proof.
+  unfold csc. rewrite sin_pi_4.
+  assert (H1 : √(2) * √(2) = 2) by (apply sqrt_def; lra).
+  assert (H2 : √(2) <> 0) by (pose proof (sqrt_lt_R0 2); lra).
+  apply Rmult_eq_reg_r with (r := √(2)); try lra.
+  replace (1 / (√(2) / 2) * √(2)) with 2 by (field; lra).
+  rewrite H1. lra.
+Qed.
+
+Lemma sec_pi_4 : sec (π / 4) = √(2).
+Proof.
+  unfold sec. rewrite cos_pi_4.
+  assert (H1 : √(2) * √(2) = 2) by (apply sqrt_def; lra).
+  assert (H2 : √(2) <> 0) by (pose proof (sqrt_lt_R0 2); lra).
+  apply Rmult_eq_reg_r with (r := √(2)); try lra.
+  replace (1 / (√(2) / 2) * √(2)) with 2 by (field; lra).
+  rewrite H1. lra.
+Qed.
+
+Lemma sec_pi_3 : sec (π / 3) = 2.
+Proof.
+  unfold sec. rewrite cos_pi_3. lra.
+Qed.
+
+Lemma csc_pi_3 : csc (π / 3) = 2 * √(3) / 3.
+Proof.
+  unfold csc. rewrite sin_pi_3.
+  assert (H1 : √(3) * √(3) = 3) by (apply sqrt_def; lra).
+  assert (H2 : √(3) <> 0) by (pose proof (sqrt_lt_R0 3); lra).
+  apply Rmult_eq_reg_r with (r := √(3)); try lra.
+  replace (1 / (√(3) / 2) * √(3)) with 2 by (field; lra).
+  replace (2 * √(3) / 3 * √(3)) with 2 by (replace (2 * √(3) / 3 * √(3)) with (2 * (√(3) * √(3)) / 3) by lra; rewrite H1; lra).
+  reflexivity.
+Qed.
+
+Lemma cot_pi_3 : cot (π / 3) = √(3) / 3.
+Proof.
+  unfold cot. rewrite tan_pi_3.
+  assert (H1 : √(3) * √(3) = 3) by (apply sqrt_def; lra).
+  assert (H2 : √(3) <> 0) by (pose proof (sqrt_lt_R0 3); lra).
+  apply Rmult_eq_reg_r with (r := √(3)); try lra.
+  replace (1 / √(3) * √(3)) with 1 by (field; lra).
+  replace (√(3) / 3 * √(3)) with 1 by (replace (√(3) / 3 * √(3)) with ((√(3) * √(3)) / 3) by lra; rewrite H1; lra).
+  reflexivity.
+Qed.
+
+Lemma arcsin_0 : arcsin 0 = 0.
+Proof.
+  pose proof arcsin_spec as [H1 [H2 [H3 H4]]].
+  rewrite <- H3; [f_equal; symmetry; apply sin_0 | pose proof π_pos; solve_R].
+Qed.
+
+Lemma arcsin_1 : arcsin 1 = π / 2.
+Proof.
+  pose proof arcsin_spec as [H1 [H2 [H3 H4]]].
+  rewrite <- H3; [f_equal; symmetry; apply sin_pi_2 | pose proof π_pos; solve_R].
+Qed.
+
+Lemma arcsin_neg_1 : arcsin (-1) = - (π / 2).
+Proof.
+  pose proof arcsin_spec as [H1 [H2 [H3 H4]]].
+  rewrite <- H3; [f_equal; symmetry; rewrite sin_even_odd, sin_pi_2; lra | pose proof π_pos; solve_R].
+Qed.
+
+Lemma arcsin_1_over_2 : arcsin (1 / 2) = π / 6.
+Proof.
+  pose proof arcsin_spec as [H1 [H2 [H3 H4]]].
+  rewrite <- H3; [f_equal; symmetry; apply sin_pi_6 | pose proof π_pos; solve_R].
+Qed.
+
+Lemma arcsin_sqrt2_over_2 : arcsin (√(2) / 2) = π / 4.
+Proof.
+  pose proof arcsin_spec as [H1 [H2 [H3 H4]]].
+  rewrite <- H3; [f_equal; symmetry; apply sin_pi_4 | pose proof π_pos; solve_R].
+Qed.
+
+Lemma arcsin_sqrt3_over_2 : arcsin (√(3) / 2) = π / 3.
+Proof.
+  pose proof arcsin_spec as [H1 [H2 [H3 H4]]].
+  rewrite <- H3; [f_equal; symmetry; apply sin_pi_3 | pose proof π_pos; solve_R].
+Qed.
+
+Lemma arccos_1 : arccos 1 = 0.
+Proof.
+  pose proof arccos_spec as [H1 [H2 [H3 H4]]].
+  rewrite <- H3; [f_equal; symmetry; apply cos_0 | pose proof π_pos; solve_R].
+Qed.
+
+Lemma arccos_0 : arccos 0 = π / 2.
+Proof.
+  pose proof arccos_spec as [H1 [H2 [H3 H4]]].
+  rewrite <- H3; [f_equal; symmetry; apply cos_pi_2_val | pose proof π_pos; solve_R].
+Qed.
+
+Lemma arccos_neg_1 : arccos (-1) = π.
+Proof.
+  pose proof arccos_spec as [H1 [H2 [H3 H4]]].
+  rewrite <- H3; [f_equal; symmetry; apply cos_π | pose proof π_pos; solve_R].
+Qed.
+
+Lemma arccos_1_over_2 : arccos (1 / 2) = π / 3.
+Proof.
+  pose proof arccos_spec as [H1 [H2 [H3 H4]]].
+  rewrite <- H3; [f_equal; symmetry; apply cos_pi_3 | pose proof π_pos; solve_R].
+Qed.
+
+Lemma arccos_sqrt2_over_2 : arccos (√(2) / 2) = π / 4.
+Proof.
+  pose proof arccos_spec as [H1 [H2 [H3 H4]]].
+  rewrite <- H3; [f_equal; symmetry; apply cos_pi_4 | pose proof π_pos; solve_R].
+Qed.
+
+Lemma arccos_sqrt3_over_2 : arccos (√(3) / 2) = π / 6.
+Proof.
+  pose proof arccos_spec as [H1 [H2 [H3 H4]]].
+  rewrite <- H3; [f_equal; symmetry; apply cos_pi_6 | pose proof π_pos; solve_R].
+Qed.
+
+Lemma arctan_sqrt3_over_3 : arctan (√(3) / 3) = π / 6.
+Proof.
+  pose proof arctan_spec as [H1 [H2 [H3 H4]]].
+  rewrite <- H3; [f_equal; symmetry; apply tan_pi_6 | pose proof π_pos; solve_R].
+Qed.
+
+Lemma arctan_sqrt3 : arctan (√(3)) = π / 3.
+Proof.
+  pose proof arctan_spec as [H1 [H2 [H3 H4]]].
+  rewrite <- H3; [f_equal; symmetry; apply tan_pi_3 | pose proof π_pos; solve_R].
+Qed.
+
+Lemma cos_3_pi_over_2 : cos (3 * π / 2) = 0.
+Proof.
+  assert (H1 : 3 * π / 2 = π + π / 2) by lra.
+  rewrite H1, cos_pi_plus, cos_pi_2_val. lra.
+Qed.
+
+Lemma sin_2pi : sin (2 * π) = 0.
+Proof.
+  assert (H1 : 2 * π = 0 + 2 * π) by lra.
+  rewrite H1, sin_periodic, sin_0. reflexivity.
+Qed.
+
+Lemma cos_2pi : cos (2 * π) = 1.
+Proof.
+  assert (H1 : 2 * π = 0 + 2 * π) by lra.
+  rewrite H1, cos_periodic, cos_0. reflexivity.
+Qed.
+
+Lemma tan_pi : tan π = 0.
+Proof.
+  unfold tan. rewrite sin_π, cos_π. lra.
+Qed.
+
+Lemma sec_pi : sec π = -1.
+Proof.
+  unfold sec. rewrite cos_π. lra.
+Qed.
+
+Lemma cot_3_pi_over_2 : cot (3 * π / 2) = 0.
+Proof.
+  unfold cot, tan. rewrite cos_3_pi_over_2.
+  repeat rewrite Rdiv_0_r.
+  lra.
+Qed.
+
+Lemma arcsin_neg_1_over_2 : arcsin (- (1 / 2)) = - (π / 6).
+Proof.
+  pose proof arcsin_spec as [H1 [H2 [H3 H4]]].
+  rewrite <- H3; [f_equal; symmetry; rewrite sin_even_odd, sin_pi_6; lra | pose proof π_pos; solve_R].
+Qed.
+
+Lemma arcsin_neg_sqrt2_over_2 : arcsin (- (√(2) / 2)) = - (π / 4).
+Proof.
+  pose proof arcsin_spec as [H1 [H2 [H3 H4]]].
+  rewrite <- H3; [f_equal; symmetry; rewrite sin_even_odd, sin_pi_4; lra | pose proof π_pos; solve_R].
+Qed.
+
+Lemma arcsin_neg_sqrt3_over_2 : arcsin (- (√(3) / 2)) = - (π / 3).
+Proof.
+  pose proof arcsin_spec as [H1 [H2 [H3 H4]]].
+  rewrite <- H3; [f_equal; symmetry; rewrite sin_even_odd, sin_pi_3; lra | pose proof π_pos; solve_R].
+Qed.
+
+Lemma arctan_neg_1 : arctan (-1) = - (π / 4).
+Proof.
+  pose proof arctan_neg 1 as H1. replace (- (1)) with (-1) in H1 by lra.
+  rewrite H1, arctan_1.
+  lra.
+Qed.
+
+Lemma arctan_neg_sqrt3_over_3 : arctan (- (√(3) / 3)) = - (π / 6).
+Proof.
+  rewrite arctan_neg, arctan_sqrt3_over_3. lra.
+Qed.
+
+Lemma arctan_neg_sqrt3 : arctan (- √(3)) = - (π / 3).
+Proof.
+  rewrite arctan_neg, arctan_sqrt3. lra.
 Qed.

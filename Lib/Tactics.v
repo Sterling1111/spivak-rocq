@@ -1,4 +1,4 @@
-From Lib Require Import Imports Notations Reals_util Sets Limit Continuity Derivative Integral Trigonometry Functions Interval Sums Exponential.
+From Lib Require Import Imports Notations Reals_util Sets Limit Continuity Derivative Integral Trigonometry Functions Interval Sums Exponential StdlibCompat.
 Import IntervalNotations SetNotations FunctionNotations DerivativeNotations LimitNotations IntegralNotations SumNotations.
 
 Declare ML Module "auto_int_plugin.plugin".
@@ -127,7 +127,7 @@ Fixpoint wf_cont (e : expr) (a : R) : Prop :=
   | ETan e | ESec e => wf_cont e a /\ cos (eval_expr e a) <> 0
   | ECot e | ECsc e => wf_cont e a /\ sin (eval_expr e a) <> 0
   | EArcsin e | EArccos e => wf_cont e a /\ -1 < eval_expr e a < 1
-  | ESqrt e => wf_cont e a /\ eval_expr e a > 0
+  | ESqrt e => wf_cont e a /\ eval_expr e a >= 0
   | EApp f _ e => wf_cont e a /\ continuous_at f (eval_expr e a)
   end.
 
@@ -575,6 +575,16 @@ Proof. extensionality x. apply ln_eq_log. Qed.
 Ltac normalize_math_funs :=
   try rewrite ln_fun_eq in *.
 
+Lemma e_bounds : 2.71 < e < 2.72.
+Proof.
+  unfold e. rewrite exp_compat. interval.
+Qed.
+
+Lemma π_bounds : 3.14 < π < 3.15.
+Proof.
+  rewrite π_compat. interval.
+Qed.
+
 Ltac eval_math_constants :=
   try rewrite sin_0 in *;
   try rewrite cos_0 in *;
@@ -598,6 +608,58 @@ Ltac eval_math_constants :=
   try rewrite log_e in *;
   try rewrite ln_e in *;
   try rewrite sqrt_1 in *;
+  try rewrite sin_3_π_over_2 in *;
+  try rewrite cos_π_over_4 in *;
+  try rewrite sin_π_over_4 in *;
+  try rewrite tan_pi_div_4 in *;
+  try rewrite arctan_1 in *;
+  try rewrite arctan_0 in *;
+  try rewrite sin_pi_2 in *;
+  try rewrite cos_pi_2_val in *;
+  try rewrite cos_3_π_over_2 in *;
+  try rewrite tan_π in *;
+  try rewrite sin_2π in *;
+  try rewrite cos_2π in *;
+  try rewrite sec_0 in *;
+  try rewrite cot_pi_4 in *;
+  try rewrite sin_5_pi_6 in *;
+  try rewrite cos_2_pi_3 in *;
+  try rewrite csc_pi_2 in *;
+  try rewrite cot_pi_2 in *;
+  try rewrite csc_pi_6 in *;
+  try rewrite sec_pi_6 in *;
+  try rewrite cot_pi_6 in *;
+  try rewrite csc_pi_4 in *;
+  try rewrite sec_pi_4 in *;
+  try rewrite sec_pi_3 in *;
+  try rewrite csc_pi_3 in *;
+  try rewrite cot_pi_3 in *;
+  try rewrite arcsin_0 in *;
+  try rewrite arcsin_1 in *;
+  try rewrite arcsin_neg_1 in *;
+  try rewrite arcsin_1_over_2 in *;
+  try rewrite arcsin_sqrt2_over_2 in *;
+  try rewrite arcsin_sqrt3_over_2 in *;
+  try rewrite arccos_1 in *;
+  try rewrite arccos_0 in *;
+  try rewrite arccos_neg_1 in *;
+  try rewrite arccos_1_over_2 in *;
+  try rewrite arccos_sqrt2_over_2 in *;
+  try rewrite arccos_sqrt3_over_2 in *;
+  try rewrite arctan_sqrt3_over_3 in *;
+  try rewrite arctan_sqrt3 in *;
+  try rewrite cos_3_pi_over_2 in *;
+  try rewrite sin_2pi in *;
+  try rewrite cos_2pi in *;
+  try rewrite tan_pi in *;
+  try rewrite sec_pi in *;
+  try rewrite cot_3_pi_over_2 in *;
+  try rewrite arcsin_neg_1_over_2 in *;
+  try rewrite arcsin_neg_sqrt2_over_2 in *;
+  try rewrite arcsin_neg_sqrt3_over_2 in *;
+  try rewrite arctan_neg_1 in *;
+  try rewrite arctan_neg_sqrt3_over_3 in *;
+  try rewrite arctan_neg_sqrt3 in *;
   try rewrite sqrt_0 in *.
 
 Ltac solve_denoms :=
@@ -605,21 +667,31 @@ Ltac solve_denoms :=
   try match goal with
   | [ H : ?v ∈ (?lo, ?hi) |- _ ] => 
       unfold "∈" in H; destruct H 
+  | [ H : ?v ∈ [?lo, ?hi] |- _ ] => 
+      unfold "∈" in H; destruct H 
   end;
+  try pose proof π_bounds;
+  try pose proof e_bounds;
   try (nra || lra || solve_R);
   match goal with
   | |- ?X <> 0 => apply Rgt_not_eq; solve_denoms
   | |- ?X <> 0 => apply Rlt_not_eq; solve_denoms
+  | |- 0 <> ?X => apply Rlt_not_eq; solve_denoms
+  | |- 0 <> ?X => apply Rgt_not_eq; solve_denoms
   | |- 0 < √( ?X ) => apply sqrt_lt_R0; solve_denoms
   | |- √( ?X ) > 0 => apply sqrt_lt_R0; solve_denoms
   | |- √( ?X ) <> 0 => apply Rgt_not_eq; apply sqrt_lt_R0; solve_denoms
   | |- 0 <> √( ?X ) => apply Rlt_not_eq; apply sqrt_lt_R0; solve_denoms
   | |- 0 < exp ?X => apply exp_pos
+  | |- exp ?X > 0 => apply exp_pos
   | |- exp ?X <> 0 => apply exp_neq_0
+  | |- 0 <> exp ?X => apply not_eq_sym; apply exp_neq_0
   | |- 0 < e => unfold e; apply exp_pos
   | |- e > 0 => unfold e; apply exp_pos
   | |- e <> 0 => unfold e; apply exp_neq_0
+  | |- 0 <> e => apply not_eq_sym; unfold e; apply exp_neq_0
   | |- 0 < ?X ^ 2 => apply pow2_gt_0; solve_denoms
+  | |- ?X ^ 2 > 0 => apply pow2_gt_0; solve_denoms
   | |- 0 < ?X ^^ ?Y => apply Rpower_gt_0; solve_denoms
   | |- ?X ^^ ?Y > 0 => apply Rpower_gt_0; solve_denoms
   | |- 0 < 1 + ?X => assert (0 < X) by solve_denoms; lra
@@ -628,16 +700,49 @@ Ltac solve_denoms :=
   | |- log (1 + ?X) > 0 => apply log_pos; assert (0 < X) by solve_denoms; lra
   | |- 0 < log ?X => apply log_pos; solve_denoms
   | |- log ?X > 0 => apply log_pos; solve_denoms
+  | |- log ?X <> 0 => apply Rgt_not_eq; apply log_pos; solve_denoms
   | |- 0 < sin ?X => apply sin_gt_0; solve_denoms
   | |- sin ?X > 0 => apply sin_gt_0; solve_denoms
-  | |- 0 < arcsin ?X => apply arcsin_pos; solve_denoms
-  | |- arcsin ?X > 0 => apply arcsin_pos; solve_denoms
+  | |- 0 > sin ?X => apply sin_lt_0; solve_denoms
+  | |- sin ?X < 0 => apply sin_lt_0; solve_denoms
+  | |- 0 < cos ?X => apply cos_gt_0; solve_denoms
+  | |- cos ?X > 0 => apply cos_gt_0; solve_denoms
+  | |- 0 > cos ?X => apply cos_lt_0; solve_denoms
+  | |- cos ?X < 0 => apply cos_lt_0; solve_denoms
+  | |- 0 < arcsin ?X => apply arcsin_gt_0; solve_denoms
+  | |- arcsin ?X > 0 => apply arcsin_gt_0; solve_denoms
+  | |- 0 < tan ?X => apply tan_gt_0; solve_denoms
+  | |- tan ?X > 0 => apply tan_gt_0; solve_denoms
+  | |- 0 < cot ?X => apply cot_gt_0; solve_denoms
+  | |- cot ?X > 0 => apply cot_gt_0; solve_denoms
+  | |- 0 < sec ?X => apply sec_gt_0; solve_denoms
+  | |- sec ?X > 0 => apply sec_gt_0; solve_denoms
+  | |- 0 < csc ?X => apply csc_gt_0; solve_denoms
+  | |- csc ?X > 0 => apply csc_gt_0; solve_denoms
+  | |- 0 < arccos ?X => apply arccos_gt_0; solve_denoms
+  | |- arccos ?X > 0 => apply arccos_gt_0; solve_denoms
+  | |- 0 < arctan ?X => apply arctan_gt_0; solve_denoms
+  | |- arctan ?X > 0 => apply arctan_gt_0; solve_denoms
+  | |- 0 <= cos (arctan ?X) => apply cos_arctan_nonneg
+  | |- cos (arctan ?X) >= 0 => apply cos_arctan_nonneg
+  | |- 0 < cos (arctan ?X) => apply cos_arctan_pos
+  | |- cos (arctan ?X) > 0 => apply cos_arctan_pos
+  | |- cos ?X <= 1 => apply cos_le_1
+  | |- -1 <= cos ?X => apply cos_ge_neg1
+  | |- sin ?X <= 1 => apply sin_bounds
+  | |- -1 <= sin ?X => apply sin_bounds
+  | |- sin ?X <= ?X => apply sin_bound_x; solve_denoms
+  | |- 0 < sin (π * ?X) <= 1 => apply sin_pi_x_bounds; solve_denoms
   | |- 0 < π => try pose proof π_pos; lra
   | |- π > 0 => try pose proof π_pos; lra
+  | |- π <> 0 => try pose proof π_pos; lra
+  | |- 0 <> π => try pose proof π_pos; lra
   | |- 0 < PI => try pose proof PI_RGT_0; lra
   | |- PI > 0 => try pose proof PI_RGT_0; lra
+  | |- PI <> 0 => try pose proof PI_RGT_0; lra
+  | |- 0 <> PI => try pose proof PI_RGT_0; lra
   end;
-  try (nra || lra || solve_R).
+  try (nra || lra || solve_R || interval).
 
 Ltac simp_zero :=
   repeat (
@@ -778,16 +883,19 @@ Ltac auto_int :=
       get_antiderivative g;
       let H1 := fresh "H" in
       assert (H1 : a < b);
-      [ clear g; try eval_math_constants; try solve [ lra | solve_R ]
+      [ clear g; try eval_math_constants; try solve_denoms
       | let H2 := fresh "H" in
         assert (H2 : continuous_on f [a, b]);
-        [ clear H1 g; auto_cont; try eval_math_constants; try solve [ lra | solve_R ]
+        [ clear H1 g; auto_cont; try eval_math_constants; try solve_denoms
         | let H3 := fresh "H" in
-          assert (H3 : ⟦ der ⟧ g [a, b] = f);
-          [ clear H1 H2; unfold g; auto_diff; try eval_math_constants; try solve [ lra | solve_R ]
-          | let H_FTC := fresh "H_FTC" in
-            pose proof (FTC2 a b f g H1 H2 H3) as H_FTC;
-            rewrite H_FTC; unfold g; clear H_FTC H3 H2 H1 g; try eval_math_constants; try solve [ lra | solve_R ] ] ] ]
+          assert (H3 : continuous_on g [a, b]);
+          [ clear H1 H2; unfold g; auto_cont; try eval_math_constants; try solve_denoms
+          | let H4 := fresh "H" in
+            assert (H4 : ⟦ der ⟧ g (a, b) = f);
+            [ clear H1 H2 H3; unfold g; auto_diff; try eval_math_constants; try solve_denoms
+            | let H_FTC := fresh "H_FTC" in
+              pose proof (FTC2_open a b f g H1 H2 H3 H4) as H_FTC;
+              rewrite H_FTC; unfold g; clear H_FTC H4 H3 H2 H1 g; try eval_math_constants; simp_zero; try solve_denoms ] ] ] ]
   | |- antiderivative ?f ?F =>
       unfold antiderivative; auto_diff
   | |- antiderivative_on ?f ?F ?D =>
@@ -845,10 +953,8 @@ Qed.
 
 Example FTC2_test2 : ∫ 0 1 (fun x => x^2) = 1/3.
 Proof.
-  get_antiderivative g.
   auto_int.
 Qed.
-
 
 Lemma integral_sin5_cos : ∫ (λ x, sin x ^ 5 * cos x) = (λ x, sin x ^ 6 / 6).
 Proof.
@@ -865,10 +971,10 @@ Lemma test_def_int_exp : ∫ 0 1 (λ x : ℝ, exp x) = e - 1.
 Proof. auto_int. Qed.
 
 Lemma test_def_int_trig : ∫ 0 π (λ x : ℝ, sin x) = 2.
-Proof. auto_int. apply π_pos. Qed.
+Proof. auto_int. Qed.
 
 Lemma test_def_int_cos : ∫ 0 π (λ x : ℝ, cos x) = 0.
-Proof. auto_int. apply π_pos. Qed.
+Proof. auto_int. Qed.
   
 Lemma test_indef_int_exp : antiderivative (λ x : ℝ, exp x) (λ x : ℝ, exp x).
 Proof. auto_int. Qed.
@@ -942,13 +1048,8 @@ Qed.
 Lemma integral_tan_local : 
   ⟦ der ⟧ (fun x => - ln (cos x)) (-1, 1) = (fun x => tan x).
 Proof.
-  auto_diff.
-  - admit.
-  -
-  unfold tan.
-  field.
-  admit.
-Abort.
+  auto_diff. unfold tan. lra.
+Qed.
 
 Lemma test_int_poly_0 : ∫ 0 1 (λ x, x^10 - 5 * x^9 + 12 * x^8 - 10 * x^7 + 20 * x^6 - 10 * x^5 + 12 * x^4 - 5 * x^3 + x^2) = 781056 / 332640.
 Proof.
@@ -965,55 +1066,56 @@ Lemma test_int_poly_3 : ∫ 0 1 (λ x, (2*x + 1)^3) = 10.
 Proof. auto_int. Qed.
 
 Lemma test_int_trig_1 : ∫ 0 (π/2) (λ x, sin x) = 1.
-Proof. auto_int. all : pose proof π_pos; lra. Qed.
+Proof. auto_int. Qed.
 
 Lemma test_int_trig_2 : ∫ 0 π (λ x, cos x) = 0.
-Proof. auto_int. pose proof π_pos; lra. Qed.
+Proof. auto_int. Qed.
 
 Lemma test_int_trig_3 : ∫ 0 (π/4) (λ x, sec x ^ 2) = 1.
 Proof.
-  auto_int. 1, 3 : pose proof π_pos; lra.
-  - admit.
-  - admit.
-  - admit.
-  - field. interval.
-Admitted.
+  auto_int. simpl. rewrite Rmult_1_r. solve_denoms. unfold sec. solve_R.
+  2 : { solve_denoms. } apply pythagorean_identity.
+Qed.
 
 Lemma test_int_trig_4 : ∫ 0 π (λ x, sin x * cos x) = 0.
-Proof. auto_int. apply π_pos. Qed.
+Proof. auto_int. Qed.
 
 Lemma test_int_exp_1 : ∫ 0 1 (λ x, exp x) = e - 1.
 Proof. auto_int. Qed.
 
 Lemma test_int_exp_2 : ∫ 0 (log 2) (λ x, exp x) = 1.
-Proof. auto_int. pose proof log_pos 2. lra. Admitted.
+Proof. auto_int. rewrite exp_log; lra. Qed.
 
 Lemma test_int_exp_3 : ∫ 0 1 (λ x, exp (2 * x)) = (exp 2 - 1) / 2.
-Proof. auto_int. rewrite Rmult_0_r, Rmult_1_r, exp_0. lra. Qed.
+Proof. auto_int. eval_math_constants; lra. Qed.
 
 Lemma test_int_log_1 : ∫ 1 e (λ x, 1 / x) = 1.
-Proof. auto_int. Admitted.
+Proof. auto_int. Qed.
 
 Lemma test_int_log_2 : ∫ 1 2 (λ x, log x) = 2 * log 2 - 1.
 Proof. auto_int. Qed.
 
 Lemma test_int_sqrt_1 : ∫ 0 1 (λ x, sqrt x) = 2 / 3.
-Proof. auto_int. simpl. Admitted.
+Proof. 
+  auto_int. pose proof sqrt_lt_R0 x ltac:(solve_R) as H1.
+  pose proof (sqrt_sqrt x ltac:(solve_R)) as H2.
+  apply Rmult_eq_reg_r with (r := 3 * √x); solve_R.
+Qed.
 
 Lemma test_int_sqrt_2 : ∫ 0 3 (λ x, 1 / sqrt (x + 1)) = 2.
 Proof.
   auto_int.
   - rewrite Rplus_comm. solve_R.
     pose proof sqrt_lt_R0 (x + 1). lra.  
-  - rewrite Rplus_0_r, sqrt_1. replace (1 + 3) with (2 * 2) by lra.
+  - rewrite sqrt_1. replace (1 + 3) with (2 * 2) by lra.
     rewrite sqrt_square; lra.
 Qed.
 
 Lemma test_int_invtrig_1 : ∫ 0 1 (λ x, 1 / (x^2 + 1)) = π / 4.
-Proof. auto_int. rewrite arctan_1, arctan_0. lra. Qed.
+Proof. auto_int. Qed.
 
 Lemma test_int_invtrig_2 : ∫ 0 (1/2) (λ x, 1 / sqrt (1 - x^2)) = π / 6.
-Proof. auto_int. Admitted.
+Proof. auto_int. Qed.
 
 Lemma test_int_subst_1 : ∫ 0 1 (λ x, x * exp (x^2)) = (e - 1) / 2.
 Proof. auto_int. rewrite pow1, pow_i; try lia. rewrite exp_0. unfold e. lra. Qed.
