@@ -525,14 +525,14 @@ Qed.
 Lemma integral_61 : forall c, 
 ∫ (fun x => (sin x) ^ 2) = (fun x => x / 2 - 1 / 4 * sin (2 * x) + c).
 Proof.
-  auto_int.
-Abort.
+  auto_int. rewrite cos_2x_3. solve_R.
+Qed.
 
 Lemma integral_62 : forall c, 
 ∫ (fun x => (sin x) ^ 3) = (fun x => - 3 / 4 * cos x + 1 / 12 * cos (3 * x) + c).
 Proof.
-  auto_int.
-Abort.
+  auto_int. rewrite sin_3x. solve_R.
+Qed.
 
 Lemma integral_63 : forall c, 
 ∫ (fun x => cos x) = (fun x => sin x + c).
@@ -543,14 +543,14 @@ Qed.
 Lemma integral_64 : forall c, 
 ∫ (fun x => (cos x) ^ 2) = (fun x => x / 2 + 1 / 4 * sin (2 * x) + c).
 Proof.
-  auto_int.
-Abort.
+  auto_int. rewrite cos_2x_2. solve_R.
+Qed.
 
 Lemma integral_65 : forall c, 
 ∫ (fun x => (cos x) ^ 3) = (fun x => 3 / 4 * sin x + 1 / 12 * sin (3 * x) + c).
 Proof.
-  auto_int.
-Abort.
+  auto_int. rewrite cos_3x. solve_R.
+Qed.
 
 Lemma integral_66 : forall c, 
 ∫ (fun x => sin x * cos x) = (fun x => -1 / 2 * (cos x) ^ 2 + c).
@@ -561,14 +561,18 @@ Qed.
 Lemma integral_67 : forall c, 
 ∫ (fun x => (sin x) ^ 2 * cos x) = (fun x => 1 / 4 * sin x - 1 / 12 * sin (3 * x) + c).
 Proof.
-  auto_int.
-Abort.
+  auto_int. rewrite cos_3x. pose proof pythagorean_identity x as H1.
+  replace (sin x * sin x) with (1 - (cos x)^2 ); solve_R.
+Qed.
 
 Lemma integral_68 : forall c, 
 ∫ (fun x => sin x * (cos x) ^ 2) = (fun x => -1 / 4 * cos x - 1 / 12 * cos (3 * x) + c).
 Proof.
   auto_int.
-Abort.
+  rewrite sin_3x. 
+  pose proof pythagorean_identity x as H1.
+  replace (cos x * cos x) with (1 - (sin x)^2); solve_R.
+Qed.
 
 Lemma integral_69 : forall c, 
 ∫ (fun x => (sin x) ^ 2 * (cos x) ^ 2) = (fun x => x / 8 - 1 / 32 * sin (4 * x) + c).
