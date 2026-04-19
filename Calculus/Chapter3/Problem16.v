@@ -3,7 +3,7 @@ From Calculus.Chapter1 Require Import Problem24.
 
 
 Lemma lemma_3_16_a : forall (f : R -> R) l,
-  (forall x y, f(x + y) = f x + f y) -> f(standard_sum l) = standard_sum (map f l).
+  (forall x y, f(x + y) = f x + f y) -> f (standard_sum l) = standard_sum (map f l).
 Proof.
   intros f l.
   induction l as [|a l IHl].
@@ -17,4 +17,7 @@ Lemma lemma_3_16_b : forall f : R -> R,
   (forall x y, f (x + y) = f x + f y) -> 
   exists c : R, forall x, rational x -> f x = c * x.
 Proof.
+  intros f H1.
+  exists (f 1).
+  
 Abort.

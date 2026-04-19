@@ -4360,9 +4360,6 @@ Proof.
     + apply derivative_at_mult_const_r; auto.
 Qed.
 
-
-
-
 Lemma derivative_at_imp_derive_at : forall f f' a,
   ⟦ der a ⟧ f = f' -> ⟦ Der a ⟧ f = f' a.
 Proof.
