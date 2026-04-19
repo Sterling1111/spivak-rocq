@@ -672,19 +672,22 @@ Ltac auto_limit :=
       apply limit_subst with (L1 := eval_expr e a);
       [ simpl; try eval_math_constants; try solve_denoms; try lra; solve_R 
       | apply limit_eval_expr; repeat split;
-        try solve [ simpl; try eval_math_constants; try solve_denoms; try lra; solve_R | auto ] 
+        try solve [ simpl; try eval_math_constants; try solve_denoms; try lra; solve_R | auto ];
+        try (cbn -[Rabs pow] in *; try eval_math_constants; try simp_zero)
       ]
   | [ |- ⟦ lim ?a⁺ ⟧ (fun x => eval_expr ?e x) = ?L ] => 
       apply limit_right_subst with (L1 := eval_expr e a);
       [ simpl; try eval_math_constants; try solve_denoms; try lra; solve_R 
       | apply right_limit_eval_expr; repeat split;
-        try solve [ simpl; try eval_math_constants; try solve_denoms; try lra; solve_R | auto ] 
+        try solve [ simpl; try eval_math_constants; try solve_denoms; try lra; solve_R | auto ];
+        try (cbn -[Rabs pow] in *; try eval_math_constants; try simp_zero)
       ]
   | [ |- ⟦ lim ?a⁻ ⟧ (fun x => eval_expr ?e x) = ?L ] => 
       apply limit_left_subst with (L1 := eval_expr e a);
       [ simpl; try eval_math_constants; try solve_denoms; try lra; solve_R 
       | apply left_limit_eval_expr; repeat split;
-        try solve [ simpl; try eval_math_constants; try solve_denoms; try lra; solve_R | auto ] 
+        try solve [ simpl; try eval_math_constants; try solve_denoms; try lra; solve_R | auto ];
+        try (cbn -[Rabs pow] in *; try eval_math_constants; try simp_zero)
       ]
   end.
 
@@ -700,7 +703,8 @@ Ltac auto_cont :=
   match goal with
   | [ |- continuous_at (fun x => eval_expr ?e x) ?a ] =>
       apply cont_correct;
-      repeat split; try solve [ simpl; try eval_math_constants; try solve_denoms; try lra; solve_R | auto ]
+      repeat split; try solve [ simpl; try eval_math_constants; try solve_denoms; try lra; solve_R | auto ];
+      try (cbn -[Rabs pow] in *; try eval_math_constants; try simp_zero)
   end.
 
 Ltac auto_diff_core :=
@@ -711,7 +715,8 @@ Ltac auto_diff_core :=
       [ apply derive_correct; 
         simpl in *; try eval_math_constants;
         repeat split; 
-        try solve [ try solve_denoms; try lra; solve_R | auto ]
+        try solve [ try solve_denoms; try lra; solve_R | auto ];
+        try (cbn -[Rabs pow] in *; try eval_math_constants; try simp_zero)
       | unfold compose in *; try diff_simplify ]
 
   | [ |- ⟦ der ⟧ (fun t => eval_expr ?e t) = ?rhs ] =>
@@ -719,7 +724,8 @@ Ltac auto_diff_core :=
       [ apply derive_correct_global; 
         simpl in *; try eval_math_constants;
         repeat split; 
-        try solve [ try solve_denoms; try lra; solve_R | auto ]
+        try solve [ try solve_denoms; try lra; solve_R | auto ];
+        try (cbn -[Rabs pow] in *; try eval_math_constants; try simp_zero)
       | let x := fresh "x" in extensionality x; unfold compose in *; try diff_simplify ]
   end.
 
@@ -967,8 +973,8 @@ Proof. auto_int. pose proof π_pos; lra. Qed.
 Lemma test_int_trig_3 : ∫ 0 (π/4) (λ x, sec x ^ 2) = 1.
 Proof.
   auto_int. 1, 3 : pose proof π_pos; lra.
-  - simpl. admit.
-  - rewrite Rmult_1_r. admit.
+  - admit.
+  - admit.
   - admit.
   - field. interval.
 Admitted.
