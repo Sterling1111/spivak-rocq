@@ -585,82 +585,21 @@ Proof.
   rewrite π_compat. interval.
 Qed.
 
+Create HintDb math_constants_db.
+Hint Rewrite  sin_0 cos_0 tan_0 sin_π cos_π sin_π_over_2 cos_π_over_2 sin_pi_6 cos_pi_6 
+              tan_pi_6 sin_pi_4 cos_pi_4 tan_pi_4 sin_pi_3 cos_pi_3 tan_pi_3 exp_0 log_1 
+              ln_1 log_e ln_e sqrt_1 sin_3_π_over_2 cos_π_over_4 sin_π_over_4 tan_pi_div_4 
+              arctan_1 arctan_0 sin_pi_2 cos_pi_2_val cos_3_π_over_2 tan_π sin_2π cos_2π 
+              sec_0 cot_pi_4 sin_5_pi_6 cos_2_pi_3 csc_pi_2 cot_pi_2 csc_pi_6 sec_pi_6 
+              cot_pi_6 csc_pi_4 sec_pi_4 sec_pi_3 csc_pi_3 cot_pi_3 arcsin_0 arcsin_1 
+              arcsin_neg_1 arcsin_1_over_2 arcsin_sqrt2_over_2 arcsin_sqrt3_over_2 arccos_1 
+              arccos_0 arccos_neg_1 arccos_1_over_2 arccos_sqrt2_over_2 arccos_sqrt3_over_2
+              arctan_sqrt3_over_3 arctan_sqrt3 cos_3_pi_over_2 sin_2pi cos_2pi tan_pi sec_pi
+              cot_3_pi_over_2 arcsin_neg_1_over_2 arcsin_neg_sqrt2_over_2 arcsin_neg_sqrt3_over_2 
+              arctan_neg_1 arctan_neg_sqrt3_over_3 arctan_neg_sqrt3 sqrt_0 : math_constants_db.
+
 Ltac eval_math_constants :=
-  try rewrite sin_0 in *;
-  try rewrite cos_0 in *;
-  try rewrite tan_0 in *;
-  try rewrite sin_π in *;
-  try rewrite cos_π in *;
-  try rewrite sin_π_over_2 in *;
-  try rewrite cos_π_over_2 in *;
-  try rewrite sin_pi_6 in *;
-  try rewrite cos_pi_6 in *;
-  try rewrite tan_pi_6 in *;
-  try rewrite sin_pi_4 in *;
-  try rewrite cos_pi_4 in *;
-  try rewrite tan_pi_4 in *;
-  try rewrite sin_pi_3 in *;
-  try rewrite cos_pi_3 in *;
-  try rewrite tan_pi_3 in *;
-  try rewrite exp_0 in *;
-  try rewrite log_1 in *;
-  try rewrite ln_1 in *;
-  try rewrite log_e in *;
-  try rewrite ln_e in *;
-  try rewrite sqrt_1 in *;
-  try rewrite sin_3_π_over_2 in *;
-  try rewrite cos_π_over_4 in *;
-  try rewrite sin_π_over_4 in *;
-  try rewrite tan_pi_div_4 in *;
-  try rewrite arctan_1 in *;
-  try rewrite arctan_0 in *;
-  try rewrite sin_pi_2 in *;
-  try rewrite cos_pi_2_val in *;
-  try rewrite cos_3_π_over_2 in *;
-  try rewrite tan_π in *;
-  try rewrite sin_2π in *;
-  try rewrite cos_2π in *;
-  try rewrite sec_0 in *;
-  try rewrite cot_pi_4 in *;
-  try rewrite sin_5_pi_6 in *;
-  try rewrite cos_2_pi_3 in *;
-  try rewrite csc_pi_2 in *;
-  try rewrite cot_pi_2 in *;
-  try rewrite csc_pi_6 in *;
-  try rewrite sec_pi_6 in *;
-  try rewrite cot_pi_6 in *;
-  try rewrite csc_pi_4 in *;
-  try rewrite sec_pi_4 in *;
-  try rewrite sec_pi_3 in *;
-  try rewrite csc_pi_3 in *;
-  try rewrite cot_pi_3 in *;
-  try rewrite arcsin_0 in *;
-  try rewrite arcsin_1 in *;
-  try rewrite arcsin_neg_1 in *;
-  try rewrite arcsin_1_over_2 in *;
-  try rewrite arcsin_sqrt2_over_2 in *;
-  try rewrite arcsin_sqrt3_over_2 in *;
-  try rewrite arccos_1 in *;
-  try rewrite arccos_0 in *;
-  try rewrite arccos_neg_1 in *;
-  try rewrite arccos_1_over_2 in *;
-  try rewrite arccos_sqrt2_over_2 in *;
-  try rewrite arccos_sqrt3_over_2 in *;
-  try rewrite arctan_sqrt3_over_3 in *;
-  try rewrite arctan_sqrt3 in *;
-  try rewrite cos_3_pi_over_2 in *;
-  try rewrite sin_2pi in *;
-  try rewrite cos_2pi in *;
-  try rewrite tan_pi in *;
-  try rewrite sec_pi in *;
-  try rewrite cot_3_pi_over_2 in *;
-  try rewrite arcsin_neg_1_over_2 in *;
-  try rewrite arcsin_neg_sqrt2_over_2 in *;
-  try rewrite arcsin_neg_sqrt3_over_2 in *;
-  try rewrite arctan_neg_1 in *;
-  try rewrite arctan_neg_sqrt3_over_3 in *;
-  try rewrite arctan_neg_sqrt3 in *;
-  try rewrite sqrt_0 in *.
+  autorewrite with math_constants_db in *.
 
 Ltac solve_denoms :=
   simpl in *;
@@ -744,12 +683,11 @@ Ltac solve_denoms :=
   end;
   try (nra || lra || solve_R || interval).
 
+Create HintDb simp_zero_db.
+Hint Rewrite Rmult_0_l Rmult_0_r Rplus_0_l Rplus_0_r Rminus_0_r Rminus_0_l Rmult_1_l Rmult_1_r : simp_zero_db.
+
 Ltac simp_zero :=
-  repeat (
-    rewrite Rmult_0_l || rewrite Rmult_0_r || rewrite Rplus_0_l ||
-    rewrite Rplus_0_r || rewrite Rminus_0_r || rewrite Rminus_0_l ||
-    rewrite Rmult_1_l || rewrite Rmult_1_r
-  ).
+  autorewrite with simp_zero_db.
 
 Ltac diff_simplify :=
   simpl; 
