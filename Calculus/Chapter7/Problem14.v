@@ -41,7 +41,8 @@ Lemma lemma_7_14_a : forall f c,
   continuous_on f [0, 1] ->
   ‖ (fun x => c * (f x)) ‖ = |c| * ‖ f ‖.
 Proof.
-  Abort.
+  intros f c H1.
+Abort.
 
 Lemma lemma_7_14_b : forall f g,
   continuous_on f [0, 1] ->
