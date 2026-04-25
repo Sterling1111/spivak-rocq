@@ -184,13 +184,14 @@ Proof. auto_cont. Qed.
 
 ## How to build and explore
 
-This project is built and verified using **The Rocq Prover, version 9.1.1** (formerly Coq). 
+This project is built and verified using **The Rocq Prover** (formerly Coq). Specifically, it depends on `rocq-core` (or `coq-core`) version **9.1.1**, and the standard library `rocq-stdlib` (or `coq-stdlib`) version **9.1.0**. Note that while the core toolchain is at version 9.1.1, the corresponding standard library package only goes up to 9.1.0.
 
 ### Prerequisites
 
-**Coq and Required Libraries**
+**Coq/Rocq and Required Libraries**
 You must have the following Coq/Rocq libraries installed before building `rocq-spivak`:
-- `coq`
+- `coq` (version 9.1.1)
+- `coq-stdlib` / `rocq-stdlib` (version 9.1.0)
 - `coq-interval`
 - `coq-coquelicot`
 - `coq-flocq`
