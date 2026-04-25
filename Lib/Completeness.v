@@ -1,4 +1,4 @@
-From Lib Require Import Imports Sets Notations Interval.
+From Lib Require Import Imports Sets Notations Interval Reals_util.
 Import SetNotations IntervalNotations.
 
 Open Scope R_scope.
@@ -397,6 +397,88 @@ Proof.
   intros f a b a' b' [[lb H1] [ub H2]] H3. split.
   - exists lb. intros y [x [H4 H5]]. specialize (H1 y). apply H1. exists x. unfold Ensembles.In in *; split; lra.
   - exists ub. intros y [x [H4 H5]]. specialize (H2 y). apply H2. exists x. unfold Ensembles.In in *; split; lra.
+Qed.
+
+Lemma bounded_on_mult : forall f g a b,
+  bounded_on f [a, b] -> bounded_on g [a, b] -> bounded_on (fun x => f x * g x) [a, b].
+Proof.
+  intros f g a b [[lb1 H1] [ub1 H2]] [[lb2 H3] [ub2 H4]].
+  split.
+  - exists (Rmin (Rmin (lb1 * lb2) (lb1 * ub2)) (Rmin (ub1 * lb2) (ub1 * ub2))).
+    intros x [y [H5 H6]]. subst. unfold is_lower_bound in *.
+    assert (H6 : f y >= lb1).
+    { apply H1. exists y. split; auto. }
+    assert (H7 : f y <= ub1).
+    { apply H2. exists y. split; auto. }
+    assert (H8 : g y >= lb2).
+    { apply H3. exists y. split; auto. }
+    assert (H9 : g y <= ub2).
+    { apply H4. exists y. split; auto. }
+    destruct (Rle_dec 0 (f y)); destruct (Rle_dec 0 (g y));
+    destruct (Rle_dec 0 lb1); destruct (Rle_dec 0 ub1);
+    destruct (Rle_dec 0 lb2); destruct (Rle_dec 0 ub2);
+    solve_R.
+  - exists (Rmax (Rmax (lb1 * lb2) (lb1 * ub2)) (Rmax (ub1 * lb2) (ub1 * ub2))). 
+    intros x [y [H5 H6]]. subst. unfold is_upper_bound in *.
+    assert (H6 : f y >= lb1).
+    { apply H1. exists y. split; auto. }
+    assert (H7 : f y <= ub1).
+    { apply H2. exists y. split; auto. }
+    assert (H8 : g y >= lb2).
+    { apply H3. exists y. split; auto. }
+    assert (H9 : g y <= ub2).
+    { apply H4. exists y. split; auto. }
+    destruct (Rle_dec 0 (f y)); destruct (Rle_dec 0 (g y));
+    destruct (Rle_dec 0 lb1); destruct (Rle_dec 0 ub1);
+    destruct (Rle_dec 0 lb2); destruct (Rle_dec 0 ub2);
+    solve_R.
+Qed.
+
+Lemma lub_glb_diff_bound : forall (f : ℝ -> ℝ) a b M,
+  (forall x y, x ∈ [a, b] -> y ∈ [a, b] -> f x - f y <= M) ->
+  forall sup inf, 
+  is_lub (fun val => exists x, x ∈ [a, b] /\ val = f x) sup ->
+  is_glb (fun val => exists x, x ∈ [a, b] /\ val = f x) inf ->
+  sup - inf <= M.
+Proof.
+  intros f a b M H1 sup inf [H2 H3] [H4 H5].
+  assert (H6 : is_upper_bound (fun val => exists x, x ∈ [a, b] /\ val = f x) (M + inf)).
+  { intros y [x [H7 H8]]. subst.
+    assert (H9 : is_lower_bound (fun val => exists x, x ∈ [a, b] /\ val = f x) (f x - M)).
+    { intros y [z [H10 H11]]. subst. specialize (H1 x z H7 H10). lra. }
+    specialize (H5 (f x - M) H9). lra. }
+  specialize (H3 (M + inf) H6). lra.
+Qed.
+
+Lemma glb_mult_nonneg_ge : forall (E1 E2 E3 : Ensemble ℝ) m1 m2 m3,
+  is_glb E1 m1 -> is_glb E2 m2 -> is_glb E3 m3 ->
+  (forall x, x ∈ E1 -> 0 <= x) -> (forall x, x ∈ E2 -> 0 <= x) ->
+  E3 ⊆ (fun y => exists x1 x2, x1 ∈ E1 /\ x2 ∈ E2 /\ y = x1 * x2) ->
+  m1 * m2 <= m3.
+Proof.
+  intros E1 E2 E3 m1 m2 m3 [H1 H2] [H3 H4] [H5 H6] H7 H8 H9.
+  assert (H10 : m1 >= 0).
+  { apply H2. intros x H10. apply Rle_ge, H7, H10. }
+  assert (H11 : m2 >= 0).
+  { apply H4. intros x H11. apply Rle_ge, H8, H11. }
+  assert (H12 : is_lower_bound E3 (m1 * m2)).
+  { intros y H12. specialize (H9 y H12) as [x1 [x2 [H13 [H14 H15]]]].
+    subst y. specialize (H1 x1 H13). specialize (H3 x2 H14). nra. }
+  apply Rge_le, H6, H12.
+Qed.
+
+Lemma lub_mult_nonneg_le : forall (E1 E2 E3 : Ensemble ℝ) M1 M2 M3,
+  is_lub E1 M1 -> is_lub E2 M2 -> is_lub E3 M3 ->
+  (forall x, x ∈ E1 -> 0 <= x) -> (forall x, x ∈ E2 -> 0 <= x) ->
+  E3 ⊆ (fun y => exists x1 x2, x1 ∈ E1 /\ x2 ∈ E2 /\ y = x1 * x2) ->
+  M3 <= M1 * M2.
+Proof.
+  intros E1 E2 E3 M1 M2 M3 [H1 H2] [H3 H4] [H5 H6] H7 H8 H9.
+  assert (H10 : is_upper_bound E3 (M1 * M2)).
+  { intros y H10. specialize (H9 y H10) as [x1 [x2 [H11 [H12 H13]]]].
+    subst y. specialize (H1 x1 H11). specialize (H3 x2 H12).
+    specialize (H7 x1 H11). specialize (H8 x2 H12). nra. }
+  apply H6, H10.
 Qed.
 
 Lemma interval_has_inf : forall (a b : ℝ) (f : ℝ -> ℝ),

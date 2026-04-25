@@ -1414,3 +1414,11 @@ Proof.
   2 : { rewrite map_nth_in_bounds with (d := 0%nat). 2 : { rewrite length_seq; lia. }
     rewrite seq_nth; try lia. reflexivity. } solve_R.
 Qed.
+
+Lemma algebraic_mult_diff_bound : forall A B a b M,
+  0 <= a -> a <= A -> 0 <= b -> b <= B -> A <= M -> B <= M ->
+  A * B - a * b <= M * (A - a) + M * (B - b).
+Proof.
+  intros A B a b M H1 H2 H3 H4 H5 H6.
+  nra.
+Qed.

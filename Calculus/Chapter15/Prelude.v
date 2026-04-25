@@ -1,3 +1,3 @@
-From Lib Require Export Imports Sets Limit Continuity Derivative Integral Notations Reals_util Inverse Functions Interval Tactics Trigonometry Sums.
+From Lib Require Export Imports Sets Limit Continuity Derivative Integral Notations Reals_util Inverse Functions Interval Tactics Trigonometry Sums Integral_Table.
 Export LimitNotations IntervalNotations SetNotations DerivativeNotations FunctionNotations IntegralNotations SumNotations.
 Open Scope R_scope.

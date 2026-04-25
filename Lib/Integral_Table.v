@@ -1092,4 +1092,32 @@ Proof.
   auto_int.
 Abort.
 
+Lemma integral_113 : forall n : ℕ, (n > 0)%nat -> ∫ (-π) π (λ x, cos (n * x) ^ 2) = π.
+Proof.
+  intros n H1.
+
+  replace (λ x : ℝ, cos (n * x) ^ 2) with (λ x : ℝ, 1 / 2 + 1 / 2 * cos (2 * n * x)).
+  2 : { extensionality x. replace (2 * n * x) with (2 * (n * x)) by lra. rewrite cos_2x_2. lra. }
+  assert (H2: -π < π) by solve_denoms.
+  rewrite integral_plus; auto.
+  2 : { apply theorem_13_3; auto_cont. }
+  2 : { apply theorem_13_3; auto_cont. }
+  assert (H3: ∫ (-π) π (λ x : ℝ, 1 / 2) = 1 / 2 * π - 1 / 2 * - π).
+  { apply FTC2_open with (g := λ x, 1 / 2 * x); try auto_cont; try auto_diff. }
+  replace (1 / 2 * π - 1 / 2 * - π) with π in H3 by lra.
+  rewrite H3.
+  assert (H4: ∫ (-π) π (λ x : ℝ, 1 / 2 * cos (2 * n * x)) = 1 / (4 * n) * sin (2 * n * π) - 1 / (4 * n) * sin (2 * n * -π)).
+  { apply FTC2_open with (g := λ x, 1 / (4 * n) * sin (2 * n * x)); try auto_cont; try auto_diff. }
+  replace (1 / (4 * n) * sin (2 * n * π) - 1 / (4 * n) * sin (2 * n * -π)) with 0 in H4.
+  2 : {
+      replace (2 * n * π) with (2 * n * π) by lra.
+      replace (2 * n * -π) with (- (2 * n * π)) by lra.
+      rewrite sin_even_odd.
+      replace (2 * n * π) with (INR (2 * n) * π).
+      2 : { rewrite mult_INR. simpl. lra. }
+      rewrite sin_n_pi. lra.
+  }
+  rewrite H4. lra.
+Qed.
+
 End Integral_Table.

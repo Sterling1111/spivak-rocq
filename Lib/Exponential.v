@@ -40,7 +40,7 @@ Proof.
     {
       intros y H3.
       rewrite log_spec; solve_R.
-      rewrite <- integral_plus' with (c := 0.5); auto.
+      rewrite <- integral_split' with (c := 0.5); auto.
       assert (H4 : continuous_on (λ t : ℝ, 1 / t) [0.5, 2]).
       { intros z H4. apply limit_imp_limit_on. solve_lim. }
         apply theorem_13_3; [ solve_R | ].

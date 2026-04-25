@@ -4237,3 +4237,11 @@ Lemma arctan_neg_sqrt3 : arctan (- √(3)) = - (π / 3).
 Proof.
   rewrite arctan_neg, arctan_sqrt3. lra.
 Qed.
+
+Lemma sin_n_pi : forall n:nat, sin (INR n * π) = 0.
+Proof.
+  induction n.
+  - simpl. rewrite Rmult_0_l. apply sin_0.
+  - rewrite S_INR. replace ((INR n + 1) * π) with (INR n * π + π) by lra.
+    rewrite sin_plus. rewrite IHn. rewrite sin_π. lra.
+Qed.

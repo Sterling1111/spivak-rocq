@@ -58,6 +58,7 @@ Lib/ComplexDerivative.v
 Lib/ComplexSequence.v
 Lib/ComplexSeries.v
 Lib/ComplexFunctions.v
+Lib/Integral_Table.v
 
 
 # ==========================
@@ -134,6 +135,7 @@ Calculus/Chapter14/Prelude.v
 
 Calculus/Chapter15/Prelude.v
 Calculus/Chapter15/Problem11.v
+Calculus/Chapter15/Problem12.v
 
 Calculus/Chapter18/Prelude.v
 

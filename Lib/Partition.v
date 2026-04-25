@@ -832,3 +832,43 @@ Proof.
   - apply H12. exact H13.
   - apply H14. exact H11.
 Qed.
+
+Lemma partition_sublist_elem_has_sup_length : forall (f : ℝ -> ℝ) (a b : ℝ) (P : partition a b) (H : bounded_on f [a, b]),
+  length (proj1_sig (partition_sublist_elem_has_sup f a b P H)) = (length (points a b P) - 1)%nat.
+Proof.
+  intros f a b P H.
+  exact (proj1 (proj2_sig (partition_sublist_elem_has_sup f a b P H))).
+Qed.
+
+Lemma partition_sublist_elem_has_inf_length : forall (f : ℝ -> ℝ) (a b : ℝ) (P : partition a b) (H : bounded_on f [a, b]),
+  length (proj1_sig (partition_sublist_elem_has_inf f a b P H)) = (length (points a b P) - 1)%nat.
+Proof.
+  intros f a b P H.
+  exact (proj1 (proj2_sig (partition_sublist_elem_has_inf f a b P H))).
+Qed.
+
+Lemma partition_sublist_elem_is_sup : forall (f : ℝ -> ℝ) (a b : ℝ) (P : partition a b) (H1 : bounded_on f [a, b]) (i : ℕ),
+  (i < length (points a b P) - 1)%nat ->
+  is_lub (fun y => exists x, x ∈ [nth i (points a b P) 0, nth (i+1) (points a b P) 0] /\ y = f x) 
+         (nth i (proj1_sig (partition_sublist_elem_has_sup f a b P H1)) 0).
+Proof.
+  intros f a b P H1 i H2.
+  pose proof (proj2_sig (partition_sublist_elem_has_sup f a b P H1)) as [H3 H4].
+  specialize (H4 i). 
+  apply H4.
+  rewrite H3.
+  exact H2.
+Qed.
+
+Lemma partition_sublist_elem_is_inf : forall (f : ℝ -> ℝ) (a b : ℝ) (P : partition a b) (H1 : bounded_on f [a, b]) (i : ℕ),
+  (i < length (points a b P) - 1)%nat ->
+  is_glb (fun y => exists x, x ∈ [nth i (points a b P) 0, nth (i+1) (points a b P) 0] /\ y = f x) 
+         (nth i (proj1_sig (partition_sublist_elem_has_inf f a b P H1)) 0).
+Proof.
+  intros f a b P H1 i H2.
+  pose proof (proj2_sig (partition_sublist_elem_has_inf f a b P H1)) as [H3 H4].
+  specialize (H4 i).
+  apply H4.
+  rewrite H3.
+  exact H2.
+Qed.

@@ -243,6 +243,13 @@ Proof.
   intros a b H1 x H2. auto_interval.
 Qed.
 
+Lemma differentiable_domain_R : 
+  differentiable_domain (ℝ : Ensemble ℝ).
+Proof.
+  intros x H1. left. exists 1. split; [lra |].
+  intros y H2. apply Full_intro.
+Qed.
+
 Lemma differentiable_domain_gt : forall a,
   differentiable_domain (fun x => x > a).
 Proof.
@@ -2709,6 +2716,36 @@ Lemma first_derivative_test_strict_max : forall f f' c,
   maximum_point_strict f R c.
 Proof.
   intros f f' c H1 H2 H3. apply first_derivative_test_domain_strict_max with (f' := f') (D := ℝ : Ensemble ℝ); auto.
+  - apply Full_intro.
+  - apply differentiable_imp_differentiable_on. apply derivative_imp_differentiable with (f' := f'); auto.
+    intros x H4; left. exists 1. split; [lra | intros y H5; apply Full_intro].
+  - apply derivative_imp_derivative_on; auto.
+    intros x H4; left. exists 1. split; [lra | intros y H5; apply Full_intro].
+  - intros x y H4 H5. apply Full_intro.
+Qed.
+
+Lemma first_derivative_test_min : forall f f' c,
+  ⟦ der ⟧ f = f' ->
+  (forall x, x < c -> f' x < 0) ->
+  (forall x, c < x -> f' x > 0) ->
+  minimum_point f ℝ c.
+Proof.
+  intros f f' c H1 H2 H3. apply first_derivative_test_domain_min with (f' := f') (D := ℝ : Ensemble ℝ); auto.
+  - apply Full_intro.
+  - apply differentiable_imp_differentiable_on. apply derivative_imp_differentiable with (f' := f'); auto.
+    intros x H4; left. exists 1. split; [lra | intros y H5; apply Full_intro].
+  - apply derivative_imp_derivative_on; auto.
+    intros x H4; left. exists 1. split; [lra | intros y H5; apply Full_intro].
+  - intros x y H4 H5. apply Full_intro.
+Qed.
+
+Lemma first_derivative_test_strict_min : forall f f' c,
+  ⟦ der ⟧ f = f' ->
+  (forall x, x < c -> f' x < 0) ->
+  (forall x, c < x -> f' x > 0) ->
+  minimum_point_strict f ℝ c.
+Proof.
+  intros f f' c H1 H2 H3. apply first_derivative_test_domain_strict_min with (f' := f') (D := ℝ : Ensemble ℝ); auto.
   - apply Full_intro.
   - apply differentiable_imp_differentiable_on. apply derivative_imp_differentiable with (f' := f'); auto.
     intros x H4; left. exists 1. split; [lra | intros y H5; apply Full_intro].

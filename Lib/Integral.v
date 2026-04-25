@@ -1391,7 +1391,7 @@ Proof.
   - apply glb_le_all_In with (E := λ x : ℝ, ∃ p : partition a b, x = (U(bf, p))); auto. exists P; reflexivity.
 Qed.
 
-Lemma integral_plus : forall f a b c,
+Lemma integral_split : forall f a b c,
   a < c < b -> integrable_on a b f -> ∫ a b f = ∫ a c f + ∫ c b f.
 Proof.
   intros f a b c H1 H2. pose proof integrable_on_sub_interval f a b c b ltac:(solve_R) H2 as H3.
@@ -1421,58 +1421,58 @@ Proof.
   apply (cond_eq (∫ a b f) (∫ a c f + ∫ c b f) H19).
 Qed.
 
-Lemma integral_plus' : forall f a b c,
+Lemma integral_split' : forall f a b c,
   integrable_on (Rmin a (Rmin b c)) (Rmax a (Rmax b c)) f -> ∫ a b f = ∫ a c f + ∫ c b f.
 Proof.
   intros f a b c H1. pose proof Rtotal_order a c as [H2 | [H2 | H2]]; pose proof Rtotal_order b c as [H3 | [H3 | H3]];
   pose proof Rtotal_order a b as [H4 | [H4 | H4]]; try (subst; rewrite integral_n_n; lra).
-  - rewrite integral_b_a_neg with (a := c). rewrite integral_plus with (b := c) (c := b); try lra.
+  - rewrite integral_b_a_neg with (a := c). rewrite integral_split with (b := c) (c := b); try lra.
     apply integrable_on_sub_interval with (a := Rmin a (Rmin b c)) (b := Rmax a (Rmax b c)); solve_R.
   - subst. rewrite integral_n_n. rewrite integral_b_a_neg with (a := c). lra.
-  - rewrite integral_b_a_neg with (a := c). rewrite integral_plus with (a := b) (b := c) (c := a); try lra.
+  - rewrite integral_b_a_neg with (a := c). rewrite integral_split with (a := b) (b := c) (c := a); try lra.
     rewrite integral_b_a_neg. lra. apply integrable_on_sub_interval with (a := Rmin a (Rmin b c)) (b := Rmax a (Rmax b c)); solve_R.
-  - rewrite integral_plus with (c := c); try lra.
+  - rewrite integral_split with (c := c); try lra.
     apply integrable_on_sub_interval with (a := Rmin a (Rmin b c)) (b := Rmax a (Rmax b c)); solve_R.
-  - rewrite integral_plus with (c := c); try lra.
-  - rewrite integral_b_a_neg with (a := c). rewrite integral_plus with (a := b) (b := c) (c := a); try lra.
-  - rewrite integral_b_a_neg. rewrite integral_plus with (a := b) (c := c); try lra. rewrite integral_b_a_neg with (a := c).
+  - rewrite integral_split with (c := c); try lra.
+  - rewrite integral_b_a_neg with (a := c). rewrite integral_split with (a := b) (b := c) (c := a); try lra.
+  - rewrite integral_b_a_neg. rewrite integral_split with (a := b) (c := c); try lra. rewrite integral_b_a_neg with (a := c).
     rewrite integral_b_a_neg. lra.
     apply integrable_on_sub_interval with (a := Rmin a (Rmin b c)) (b := Rmax a (Rmax b c)); solve_R.
-  - rewrite integral_plus with (a := c) (c := a); try lra. rewrite integral_b_a_neg with (b := c); lra.
+  - rewrite integral_split with (a := c) (c := a); try lra. rewrite integral_b_a_neg with (b := c); lra.
     apply integrable_on_sub_interval with (a := Rmin a (Rmin b c)) (b := Rmax a (Rmax b c)); solve_R.
   - subst. rewrite integral_n_n. rewrite integral_b_a_neg with (a := c). lra.
-  - rewrite integral_b_a_neg with (b := c). rewrite integral_plus with (a := c) (b := a) (c := b); try lra.
+  - rewrite integral_b_a_neg with (b := c). rewrite integral_split with (a := c) (b := a) (c := b); try lra.
     rewrite integral_b_a_neg. lra. apply integrable_on_sub_interval with (a := Rmin a (Rmin b c)) (b := Rmax a (Rmax b c)); solve_R.
 Qed.
 
-Lemma integral_minus : forall f a b c,
+Lemma integral_split_minus : forall f a b c,
   integrable_on (Rmin a (Rmin b (b + c))) (Rmax a (Rmax b (b + c))) f -> ∫ a (b + c) f - ∫ a b f = ∫ b (b + c) f.
 Proof.
-  intros f a b c H1. rewrite integral_plus' with (c := b + c) (a := a) (b := b). rewrite integral_b_a_neg with (a := b + c). lra.
+  intros f a b c H1. rewrite integral_split' with (c := b + c) (a := a) (b := b). rewrite integral_b_a_neg with (a := b + c). lra.
   auto.
 Qed.
 
-Lemma integral_minus' : forall f a b c,
+Lemma integral_split_minus' : forall f a b c,
   integrable_on (Rmin a (Rmin b c)) (Rmax a (Rmax b c)) f -> ∫ a c f = ∫ a b f - ∫ c b f.
 Proof.
   intros f a b c H1. pose proof Rtotal_order a c as [H2 | [H2 | H2]]; pose proof Rtotal_order b c as [H3 | [H3 | H3]];
   pose proof Rtotal_order a b as [H4 | [H4 | H4]]; try (subst; rewrite integral_n_n; lra).
-  - rewrite integral_b_a_neg with (a := c). field_simplify. rewrite integral_plus with (b := c) (c := b); try lra.
+  - rewrite integral_b_a_neg with (a := c). field_simplify. rewrite integral_split with (b := c) (c := b); try lra.
     apply integrable_on_sub_interval with (a := Rmin a (Rmin b c)) (b := Rmax a (Rmax b c)); solve_R.
   - subst. rewrite integral_n_n. rewrite integral_b_a_neg with (a := c). lra.
-  - rewrite integral_b_a_neg with (a := c). field_simplify. rewrite integral_plus with (a := b) (b := c) (c := a); try lra.
+  - rewrite integral_b_a_neg with (a := c). field_simplify. rewrite integral_split with (a := b) (b := c) (c := a); try lra.
     rewrite integral_b_a_neg with (a := b). lra. apply integrable_on_sub_interval with (a := Rmin a (Rmin b c)) (b := Rmax a (Rmax b c)); solve_R.
-  - rewrite integral_plus with (a := a) (b := b) (c := c); try lra. 
+  - rewrite integral_split with (a := a) (b := b) (c := c); try lra. 
     apply integrable_on_sub_interval with (a := Rmin a (Rmin b c)) (b := Rmax a (Rmax b c)); solve_R.
-  - rewrite integral_plus with (a := a) (b := b) (c := c); try lra.
-  - rewrite integral_b_a_neg with (a := c). field_simplify. rewrite integral_plus with (a := b) (b := c) (c := a); try lra.
-  - rewrite integral_b_a_neg with (a := a) (b := b). rewrite integral_plus with (a := b) (b := a) (c := c); try lra. rewrite integral_b_a_neg with (a := c).
+  - rewrite integral_split with (a := a) (b := b) (c := c); try lra.
+  - rewrite integral_b_a_neg with (a := c). field_simplify. rewrite integral_split with (a := b) (b := c) (c := a); try lra.
+  - rewrite integral_b_a_neg with (a := a) (b := b). rewrite integral_split with (a := b) (b := a) (c := c); try lra. rewrite integral_b_a_neg with (a := c).
     rewrite integral_b_a_neg with (a := b). lra.
     apply integrable_on_sub_interval with (a := Rmin a (Rmin b c)) (b := Rmax a (Rmax b c)); solve_R.
-  - rewrite integral_plus with (a := c) (b := b) (c := a); try lra. rewrite integral_b_a_neg with (b := c). lra.
+  - rewrite integral_split with (a := c) (b := b) (c := a); try lra. rewrite integral_b_a_neg with (b := c). lra.
     apply integrable_on_sub_interval with (a := Rmin a (Rmin b c)) (b := Rmax a (Rmax b c)); solve_R.
   - subst. rewrite integral_n_n. rewrite integral_b_a_neg with (a := c). lra.
-  - rewrite integral_b_a_neg with (b := c). field_simplify. rewrite integral_plus with (a := c) (b := a) (c := b); try lra.
+  - rewrite integral_b_a_neg with (b := c). field_simplify. rewrite integral_split with (a := c) (b := a) (c := b); try lra.
     rewrite integral_b_a_neg with (a := b). lra. apply integrable_on_sub_interval with (a := Rmin a (Rmin b c)) (b := Rmax a (Rmax b c)); solve_R.
 Qed.
 
@@ -1718,7 +1718,7 @@ Proof.
       rewrite H14, H1, H2, H3. reflexivity.
 Qed.
 
-Lemma theorem_13_5_a : forall f g a b,
+Lemma integrable_plus : forall f g a b,
   a < b -> integrable_on a b f -> integrable_on a b g -> integrable_on a b (fun x => f x + g x).
 Proof.
   intros f g a b H1 H2 H3.
@@ -1756,11 +1756,11 @@ Proof.
   lra.
 Qed.
 
-Lemma theorem_13_5_b : forall f g a b,
+Lemma integral_plus : forall f g a b,
   a < b -> integrable_on a b f -> integrable_on a b g -> ∫ a b (f + g) = ∫ a b f + ∫ a b g.
 Proof.
   intros f g a b H1 H2 H3.
-  pose proof theorem_13_5_a f g a b H1 H2 H3 as H4.
+  pose proof integrable_plus f g a b H1 H2 H3 as H4.
   destruct (integral_eq' a b f H1 H2) as [bf1 [r1 [H5 [H6 [H7 H8]]]]].
   destruct (integral_eq' a b g H1 H3) as [bf2 [r2 [H9 [H10 [H11 H12]]]]].
   destruct (integral_eq' a b (fun x => f x + g x) H1 H4) as [bf3 [r3 [H13 [H14 [H15 H16]]]]].
@@ -1808,7 +1808,51 @@ Proof.
     unfold ε in H20, H21, H22. lra.
 Qed.
 
-Lemma theorem_13_6_a : forall f a b c,
+Lemma integrable_mult_nonneg : forall f g a b,
+  a < b ->
+  (forall x, x ∈ [a, b] -> 0 <= f x) ->
+  (forall x, x ∈ [a, b] -> 0 <= g x) ->
+  integrable_on a b f -> integrable_on a b g ->
+  integrable_on a b (fun x => f x * g x).
+Proof.
+  intros f g a b H1 H2 H3 H4 H5.
+Admitted.
+
+Lemma upper_lower_sum_mult_bound : forall a b f g bf bg bfg P (Mf Mg : ℝ),
+  (forall x, x ∈ [a, b] -> Rabs (f x) <= Mf) ->
+  (forall x, x ∈ [a, b] -> Rabs (g x) <= Mg) ->
+  (forall x, bf.(bounded_f a b) x = f x) ->
+  (forall x, bg.(bounded_f a b) x = g x) ->
+  (forall x, bfg.(bounded_f a b) x = f x * g x) ->
+  (U(bfg, P) - L(bfg, P) <= Mf * (U(bg, P) - L(bg, P)) + Mg * (U(bf, P) - L(bf, P)))%R.
+Proof.
+Admitted.
+
+Lemma integrable_mult : forall f g a b,
+  a < b -> integrable_on a b f -> integrable_on a b g -> integrable_on a b (fun x => f x * g x).
+Proof.
+  intros f g a b H1 H2 H3.
+  pose proof H2 as H4. pose proof H3 as H5.
+  destruct H2 as [H2 | [bf [supf [inff [H6 [H7 [H8 H9]]]]]]]; [left; lra |].
+  destruct H3 as [H3 | [bg [supg [infg [H10 [H11 [H12 H13]]]]]]]; [left; lra |].
+  assert (H14 : bounded_on (fun x => f x * g x) [a, b]).
+  {
+    apply bounded_on_mult.
+    - destruct bf as [f' H14 H15]. simpl in *. subst f'. exact H15.
+    - destruct bg as [g' H16 H17]. simpl in *. subst g'. exact H17.
+  }
+  assert (H15 : a <= b) by lra.
+  set (bfg := mkbounded_function_R a b (fun x => f x * g x) H15 H14).
+  assert (H16 : integrable_on a b (bounded_f a b bf)). { rewrite H6. exact H4. }
+  assert (H17 : integrable_on a b (bounded_f a b bg)). { rewrite H10. exact H5. }
+  assert (H18 : integrable_on a b (bounded_f a b bfg) <-> (forall ε, ε > 0 -> exists P : partition a b, (U(bfg, P) - L(bfg, P)) < ε)).
+  { apply (theorem_13_2_a a b bfg); auto. }
+  destruct H18 as [_ H18].
+  change (integrable_on a b (bounded_f a b bfg)).
+  apply H18. intros ε H19.
+  Admitted.
+
+Lemma integrable_mult_scalar : forall f a b c,
   a < b -> integrable_on a b f -> integrable_on a b (c * f).
 Proof.
   intros f a b c H1 H2. destruct H2 as [H2 | [bf [sup [inf [H3 [H4 [H5 H6]]]]]]]; [ left; lra |].
@@ -1875,10 +1919,10 @@ Proof.
   - nra.
 Qed.
 
-Lemma theorem_13_6_b : forall f a b c,
+Lemma integral_mult_scalar : forall f a b c,
   a < b -> integrable_on a b f -> ∫ a b (c * f) = c * ∫ a b f.
 Proof.
-  intros f a b c H1 H2. pose proof theorem_13_6_a f a b c H1 H2 as H3.
+  intros f a b c H1 H2. pose proof integrable_mult_scalar f a b c H1 H2 as H3.
   destruct (integral_eq' a b f H1 H2) as [bf1 [r1 [H4 [H5 [H6 H7]]]]].
   destruct (integral_eq' a b (c * f) H1 H3) as [bf2 [r2 [H8 [H9 [H10 H11]]]]].
   rewrite H5, H9.
@@ -1908,6 +1952,25 @@ Proof.
       exists P1. reflexivity.
 Qed.
 
+Lemma integrable_minus : forall f g a b,
+  a < b -> integrable_on a b f -> integrable_on a b g -> integrable_on a b (f - g).
+Proof.
+  intros f g a b H1 H2 H3.
+  replace (integrable_on a b (f - g)) with (integrable_on a b (fun x => f x + (-1) * g x)) by (f_equal; extensionality x; lra).
+  apply integrable_plus; auto.
+  apply integrable_mult_scalar; auto.
+Qed.
+
+Lemma integral_minus : forall f g a b,
+  a < b -> integrable_on a b f -> integrable_on a b g -> ∫ a b (f - g) = ∫ a b f - ∫ a b g.
+Proof.
+  intros f g a b H1 H2 H3.
+  replace (f - g)%function with (fun x => f x + (-1) * g x) by (extensionality x; lra).
+  rewrite integral_plus; auto.
+  - rewrite integral_mult_scalar; auto. lra.
+  - apply integrable_mult_scalar; auto.
+Qed.
+
 Lemma integral_b_a_neg' : forall a b f,
   ∫ a b f = ∫ b a (-f).
 Proof.
@@ -1922,15 +1985,15 @@ Proof.
         assert (H4 : ∫ b a (- f) = - ∫ a b (- f)) by (pose proof (integral_b_a_neg a b (- f)); lra).
         rewrite H4.
         replace (- f)%function with (-1 * f)%function by (extensionality x; lra).
-        rewrite theorem_13_6_b; auto; try lra.
+        rewrite integral_mult_scalar; auto; try lra.
       * rewrite <- (integral_b_a_neg a b f).
         assert (H4 : ∫ b a (- f) = - ∫ a b (- f)) by (pose proof (integral_b_a_neg a b (- f)); lra).
         rewrite H4.
         replace (- f)%function with (-1 * f)%function by (extensionality x; lra).
-        rewrite theorem_13_6_b; auto; try lra.
+        rewrite integral_mult_scalar; auto; try lra.
     + assert (H3: ~ integrable_on a b (- f)).
       { intros H4. apply H2. replace f with (-1 * (- f)%function)%function by (extensionality x; lra).
-      apply theorem_13_6_a; auto. } 
+      apply integrable_mult_scalar; auto. } 
     unfold definite_integral.
     destruct (Rle_dec b a) as [H4|H4]; try (exfalso; lra).
     destruct (Rle_dec a b) as [H5|H5]; try lra.
@@ -1944,11 +2007,11 @@ Proof.
     + rewrite (integral_b_a_neg a b f).
       rewrite (integral_b_a_neg a b (- f)).
       replace (- f)%function with (-1 * f)%function by (extensionality x; lra).
-      rewrite theorem_13_6_b; auto; try lra.
+      rewrite integral_mult_scalar; auto; try lra.
     + assert (H3: ~ integrable_on b a (- f)).
       { intros H4. apply H2. 
         replace f with (-1 * (- f)%function)%function by (extensionality x; lra).
-        apply theorem_13_6_a; auto. }
+        apply integrable_mult_scalar; auto. }
       unfold definite_integral.
       destruct (Rle_dec a b) as [H4 | H4]; try (exfalso; lra).
       destruct (Rle_dec b a) as [H5 | H5]; try (exfalso; lra).
@@ -2022,8 +2085,8 @@ Proof.
   { apply integral_nonneg; auto. intros x H16. apply H2; solve_R. }
   assert (H17 : 0 <= ∫ a u f).
   { apply integral_nonneg; auto. intros x H17. apply H2; solve_R. }
-  replace (∫ a b f) with (∫ a u f + ∫ u b f) by (rewrite <- integral_plus'; solve_R).
-  replace (∫ u b f) with (∫ u v f + ∫ v b f) by (rewrite <- integral_plus'; solve_R).
+  replace (∫ a b f) with (∫ a u f + ∫ u b f) by (rewrite <- integral_split'; solve_R).
+  replace (∫ u b f) with (∫ u v f + ∫ v b f) by (rewrite <- integral_split'; solve_R).
   lra.
 Qed.
 
@@ -2258,9 +2321,9 @@ Proof.
   }
 
   assert (H60: ∫ a b f = ∫ a c2 f + ∫ c2 b f).
-  { apply integral_plus; try lra; auto. }
+  { apply integral_split; try lra; auto. }
   assert (H61: ∫ a c2 f = ∫ a c1 f + ∫ c1 c2 f).
-  { apply integral_plus; try lra; auto. }
+  { apply integral_split; try lra; auto. }
   
   destruct H44 as [H62 H63].
   destruct H46 as [H64 H65].
@@ -2291,7 +2354,7 @@ Proof.
     intros h' H9. unfold F in *. replace (∫ a (c + h') f - ∫ a c f) with (∫ c (c + h') f) in *.
     2 : {
        assert (a = c \/ a < c) as [H10 | H10] by solve_R; clear H4; rename H10 into H4. subst. rewrite integral_n_n. lra.
-       rewrite integral_minus; auto. apply theorem_13_3; solve_R. apply continuous_on_subset with (A2 := [a, b]); auto. intros x H10. solve_R. }
+       rewrite integral_split_minus; auto. apply theorem_13_3; solve_R. apply continuous_on_subset with (A2 := [a, b]); auto. intros x H10. solve_R. }
     assert (H10 : integrable_on c (c + h') f).
     { apply theorem_13_3; solve_R. apply continuous_on_subset with (A2 := [a, b]); auto. intros x H10. solve_R. }
     assert (H11 : ∀ x : ℝ, x ∈ (λ x0 : ℝ, c <= x0 <= c + h') → m h' <= f x <= M h').
@@ -2310,7 +2373,7 @@ Proof.
   assert (H10 : forall h, h ∈ (a - c, 0) -> m h <= (F (c + h) - F c) / h <= M h).
   {
     intros h' H10. unfold F in *. replace (∫ a (c + h') f - ∫ a c f) with (∫ c (c + h') f) in *.
-    2 : { rewrite integral_minus; auto. apply theorem_13_3; solve_R. apply continuous_on_subset with (A2 := [a, b]); auto. intros x H11. solve_R. }
+    2 : { rewrite integral_split_minus; auto. apply theorem_13_3; solve_R. apply continuous_on_subset with (A2 := [a, b]); auto. intros x H11. solve_R. }
     assert (H11 : integrable_on (c + h') c f).
     { apply theorem_13_3; solve_R. apply continuous_on_subset with (A2 := [a, b]); auto. intros x H11. solve_R. }
     assert (H12 : ∀ x : ℝ, x ∈ (λ x0 : ℝ, c + h' <= x0 <= c) → m h' <= f x <= M h').
@@ -2447,7 +2510,7 @@ Proof.
   apply derivative_on_eq with (f1 := (g - h)%function); auto.
   - intros x H3. unfold g, h. pose proof Rtotal_order a x as [H4 | [H4 | H4]];
     pose proof Rtotal_order x b as [H5 | [H5 | H5]]; solve_R.
-    -- rewrite integral_plus with (c := x); try lra. apply theorem_13_3; solve_R.
+    -- rewrite integral_split with (c := x); try lra. apply theorem_13_3; solve_R.
     -- subst. rewrite integral_eq with (a := b); lra.
     -- subst. rewrite integral_eq with (b := x); lra.
   - set (f1' := fun x : R => 0). replace (- f)%function with (f1' - f)%function.
@@ -2467,7 +2530,7 @@ Proof.
   replace (fun z => ∫ a z f) 
     with (fun z => ∫ (x - 1) z f - ∫ (x - 1) a f).
   2: { extensionality z. 
-       pose proof integral_minus' f (x - 1) z a as H2.
+       pose proof integral_split_minus' f (x - 1) z a as H2.
        assert (H3 : integrable_on (Rmin (x - 1) (Rmin z a)) (Rmax (x - 1) (Rmax z a)) f).
        { apply theorem_13_3; [solve_R |]. 
          apply continuous_imp_continuous_on. exact H1. }
@@ -2490,7 +2553,7 @@ Proof.
   replace (fun z => ∫ z b f) 
     with (fun z => ∫ z (x + 1) f - ∫ b (x + 1) f).
   2: { extensionality z. 
-       pose proof integral_minus' f z (x + 1) b as H2.
+       pose proof integral_split_minus' f z (x + 1) b as H2.
        assert (H3 : integrable_on (Rmin z (Rmin (x + 1) b)) (Rmax z (Rmax (x + 1) b)) f).
        { apply theorem_13_3; [solve_R |]. 
          apply continuous_imp_continuous_on. exact H1. }
@@ -2598,7 +2661,7 @@ Proof.
   set (C := Rmax (|m|) (|M|)). 
   set (δ := Rmin ((ε) / (C + 1)) (b - a)).
   exists δ. split. assert (ε / (C + 1) > 0) as H7. { unfold C. apply Rdiv_pos_pos; solve_R. }
-  unfold δ. solve_R. intros x H7. rewrite <- integral_minus'; auto.
+  unfold δ. solve_R. intros x H7. rewrite <- integral_split_minus'; auto.
   2 : { apply integrable_on_sub_interval with (a := a) (b := b); auto. unfold δ in H7; solve_R. }
   assert (H8 : integrable_on a x f).
   { apply integrable_on_sub_interval with (a := a) (b := b); auto. unfold δ in H7; solve_R. }

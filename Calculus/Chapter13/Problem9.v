@@ -7,6 +7,6 @@ Lemma lemma_13_9 : ∀ a b c d f g,
 Proof.
   intros a b c d f g H1 H2 H3 H4. 
   replace ((λ x : ℝ, ∫ c d (λ y : ℝ, f x * g y))) with (λ x : ℝ, (∫ c d g) * f x).
-  2 : { extensionality x. rewrite theorem_13_6_b with (c := f x); solve_R. }
-  rewrite theorem_13_6_b; solve_R.
+  2 : { extensionality x. rewrite integral_mult_scalar with (c := f x); solve_R. }
+  rewrite integral_mult_scalar; solve_R.
 Qed.

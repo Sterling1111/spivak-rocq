@@ -283,10 +283,10 @@ Proof.
     assert (H12 : integrable_on 0 1 (λ x : ℝ, a ^ n * f n x * sin (π * x))).
     { apply theorem_13_3; auto_cont. apply differentiable_at_imp_continuous_at, f_n_differentiable. }
     
-    rewrite theorem_13_6_b in H10; auto; try lra.
+    rewrite integral_mult_scalar in H10; auto; try lra.
     pose proof π_pos as H13.
     apply Rmult_eq_compat_r with (r := 1 / π) in H10; try lra. field_simplify in H10; try lra.
-    rewrite <- theorem_13_6_b in H10; auto; try lra.
+    rewrite <- integral_mult_scalar in H10; auto; try lra.
     replace (λ x : ℝ, π * (a ^ n * f n x * sin (π * x))) with (λ x : ℝ, π * a ^ n * f n x * sin (π * x)) in H10.
     2 : { extensionality x; lra. }
     rewrite H10.
