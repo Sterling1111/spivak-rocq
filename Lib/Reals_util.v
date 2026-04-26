@@ -1422,3 +1422,12 @@ Proof.
   intros A B a b M H1 H2 H3 H4 H5 H6.
   nra.
 Qed.
+
+Lemma pow_eq_compat : forall a b n,
+  a = b -> a ^ n = b ^ n.
+Proof.
+  intros a b n H.
+  f_equal. exact H.
+Qed.
+
+Search (_ ^ _ = _ ^ _).
