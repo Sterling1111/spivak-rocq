@@ -2,6 +2,8 @@ From Calculus.Chapter20 Require Import Prelude.
 
 Lemma lemma_20_9_a : forall x,
   P(9, 0, fun x => exp ((x^2))) x = 1 + x^2 + x^4 / 2 + x^6 / 6 + x^8 / 24.
+Proof.
+  intros x.
 Abort.
 
 Lemma lemma_20_9_b : forall x n,

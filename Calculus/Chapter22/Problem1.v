@@ -1,12 +1,23 @@
 From Calculus.Chapter22 Require Import Prelude.
 
 Lemma lemma_22_1_i : ⟦ lim ⟧ (fun n => 0) = 0.
-Abort.
+Proof.
+  intros ε H1. exists 1. intros n H2. solve_R.
+Qed.
 
-Lemma lemma_22_1_ii : ⟦ lim ⟧ (fun n => INR n / INR (n + 1)) = 1.
-Abort.
+Lemma lemma_22_1_ii : ⟦ lim ⟧ (fun n => n / (n + 1)) = 1.
+Proof.
+  intros ε H1.
+  exists (1 / ε).
+  intros n H2.
+  apply Rmult_gt_compat_r with (r := ε) in H2; auto.
+  field_simplify in H2; try lra.
+  apply Rabs_def1;
+  apply Rmult_lt_reg_r with (r := (n + 1)); field_simplify; nra.
+Qed.
 
-Lemma lemma_22_1_iii : ⟦ lim ⟧ (fun n => (INR n + 3) / (INR n ^ 3 + 4)) = 0.
+Lemma lemma_22_1_iii : ⟦ lim ⟧ (fun n => (n + 3) / (n ^ 3 + 4)) = 0.
+Proof.
 Abort.
 
 Lemma lemma_22_1_iv : ⟦ lim ⟧ (fun n => INR (fact n) / (INR n ^ n)) = 0.
